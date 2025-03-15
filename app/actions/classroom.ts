@@ -45,7 +45,7 @@ export async function createClassroom(prevState, formData) {
     }
   }
 
-  const { name, description, subject, gradeLevel } = validatedFields.data
+  const { name, description, subject, grade } = validatedFields.data
 
   let classroom
 
@@ -59,7 +59,7 @@ export async function createClassroom(prevState, formData) {
         name,
         description,
         subject,
-        gradeLevel,
+        grade,
         joinCode,
         owner: {
           connect: { id: session.user.id },
@@ -101,7 +101,7 @@ export async function updateClassroom(classroomId, prevState, formData) {
     name: formData.get("name"),
     description: formData.get("description"),
     subject: formData.get("subject"),
-    gradeLevel: formData.get("grade-level"),
+    grade: formData.get("grade-level"),
   })
 
   // If form validation fails, return errors
@@ -113,7 +113,7 @@ export async function updateClassroom(classroomId, prevState, formData) {
     }
   }
 
-  const { name, description, subject, gradeLevel } = validatedFields.data
+  const { name, description, subject, grade } = validatedFields.data
 
   try {
     // Check if the user is the owner of the classroom
@@ -136,7 +136,7 @@ export async function updateClassroom(classroomId, prevState, formData) {
         name,
         description,
         subject,
-        gradeLevel,
+        grade,
       },
     })
 

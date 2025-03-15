@@ -193,11 +193,9 @@ export default function CreateClassroomPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="middle-school">Middle School</SelectItem>
-                                <SelectItem value="high-school">High School</SelectItem>
-                                <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                                <SelectItem value="graduate">Graduate</SelectItem>
-                                <SelectItem value="professional">Professional</SelectItem>
+                                <SelectItem value="Primary School">Primary School</SelectItem>
+                                <SelectItem value="High School">High School</SelectItem>
+                                <SelectItem value="University">University</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
