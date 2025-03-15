@@ -15,7 +15,7 @@ export default function Home() {
             tests in minutes.
           </p>
           <div className="flex flex-wrap justify-center md:justify-start gap-4">
-            <Button asChild size="lg" className="bg-purple-light hover:bg-purple-dark ">
+            <Button asChild size="lg">
               <Link href="/login">
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Link>

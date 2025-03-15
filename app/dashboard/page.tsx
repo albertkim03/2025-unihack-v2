@@ -53,7 +53,7 @@ export default async function DashboardPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Button asChild>
+        <Button asChild className="bg-purple-light hover:bg-purple-dark">
           <Link href="/create-test">
             <Plus className="mr-2 h-4 w-4" /> Create New Test
           </Link>

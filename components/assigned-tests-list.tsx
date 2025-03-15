@@ -18,7 +18,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
       assignedBy: "Prof. Richard Feynman",
       dueDate: "Mar 20, 2025",
       status: "Pending",
-      classroom: "Advanced Physics",
+    classroom: "Advanced Physics",
     },
     {
       id: "TEST-2002",
@@ -64,7 +64,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {assignedTests.map((test) => (
-          <Card key={test.id}>
+          <Card key={test.id} className="flex flex-col h-full">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg">{test.name}</CardTitle>
@@ -103,7 +103,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
+            <CardFooter className="flex justify-end gap-2 pt-4 mt-auto">
               {test.status === "Pending" || test.status === "Overdue" ? (
                 <Button asChild>
                   <Link href={`/take-test/${test.id}`}>

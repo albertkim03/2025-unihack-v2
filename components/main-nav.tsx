@@ -2,8 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 
 export function MainNav() {
   const { data: session, status } = useSession()
@@ -18,30 +24,26 @@ export function MainNav() {
   ]
 
   return (
-    <nav className="flex items-center space-x-4 lg:space-x-6">
-      <Link
-        href="/"
-        className={cn(
-          "text-sm font-medium transition-colors hover:text-primary",
-          pathname === "/" ? "text-primary" : "text-muted-foreground"
-        )}
-      >
-        Home
-      </Link>
-
-      {session &&
-        protectedRoutes.map((route) => (
-          <Link
-            key={route.href}
-            href={route.href}
-            className={cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              route.active ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            {route.label}
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link href="/" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Home
+            </NavigationMenuLink>
           </Link>
+        </NavigationMenuItem>
+
+        {session && protectedRoutes.map((route) => (
+          <NavigationMenuItem key={route.href}>
+            <Link href={route.href} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {route.label}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
         ))}
-    </nav>
+      </NavigationMenuList>
+    </NavigationMenu>
   )
 }
