@@ -11,7 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Search, Users, BookOpen, UserPlus } from "lucide-react"
 
-export function ClassroomsClient({ initialClassrooms }) {
+interface ClassroomOverviewProps {
+    classrooms: Classroom[]
+  }
+
+export function ClassroomsClient({ initialClassrooms, classrooms = [] }: ClassroomOverviewProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState("owned")
 
@@ -33,11 +37,13 @@ export function ClassroomsClient({ initialClassrooms }) {
         <div className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-bold tracking-tight">Classrooms</h1>
-                <Button asChild>
-                    <Link href="/classrooms/create">
-                        <Plus className="mr-2 h-4 w-4" /> Create Classroom
-                    </Link>
-                </Button>
+                {(initialClassrooms.owned.length > 0 || initialClassrooms.member.length > 0) && (
+                    <Button asChild>
+                        <Link href="/classrooms/create">
+                            <Plus className="mr-2 h-4 w-4" /> Create Classroom
+                        </Link>
+                    </Button>
+                )}
             </div>
 
             <div className="flex items-center mb-6">
