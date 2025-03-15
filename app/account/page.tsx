@@ -23,7 +23,6 @@ const initialState: ProfileFormState = {}
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession()
   const [profileState, profileAction] = useFormState(updateProfile, initialState)
-  // const [profileState, profileAction] = useState(updateProfile, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

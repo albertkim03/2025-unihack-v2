@@ -280,22 +280,6 @@ export default function CreateClassroomPage() {
                       </div>
                     </TabsContent>
                   </Tabs>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Student Permissions</Label>
-                    <Select defaultValue="view-only">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select permissions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="view-only">View Only (Take Tests)</SelectItem>
-                        <SelectItem value="contribute">Contribute (Submit Questions)</SelectItem>
-                        <SelectItem value="collaborate">Collaborate (Create Tests)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </CardContent>
               </Card>
             </div>
