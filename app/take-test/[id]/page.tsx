@@ -87,7 +87,11 @@ export default function TakeTestPage({ params }) {
       },
       // More questions would be here
     ],
+    timeLimit: "45 minutes",
   }
+
+  // Calculate total questions from the actual questions array
+  const totalQuestions = test.questions.length
 
   const handleAnswerChange = (value: string) => {
     setAnswers({
@@ -97,7 +101,7 @@ export default function TakeTestPage({ params }) {
   }
 
   const goToNextQuestion = () => {
-    if (currentQuestion < test.totalQuestions - 1) {
+    if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1)
     }
   }
@@ -118,8 +122,22 @@ export default function TakeTestPage({ params }) {
   }
 
   const currentQuestionData = test.questions[currentQuestion]
-  const progress = ((currentQuestion + 1) / test.totalQuestions) * 100
+  const progress = ((currentQuestion + 1) / totalQuestions) * 100
   const answeredQuestions = Object.keys(answers).length
+
+  // If no question data is available, show an error state
+  if (!currentQuestionData) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>Question data not available</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -135,7 +153,7 @@ export default function TakeTestPage({ params }) {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>
-                    Question {currentQuestion + 1} of {test.totalQuestions}
+                    Question {currentQuestion + 1} of {totalQuestions}
                   </CardTitle>
                   <CardDescription>Select the best answer</CardDescription>
                 </div>
@@ -177,7 +195,7 @@ export default function TakeTestPage({ params }) {
                 Previous
               </Button>
 
-              {currentQuestion < test.totalQuestions - 1 ? (
+              {currentQuestion < totalQuestions - 1 ? (
                 <Button onClick={goToNextQuestion}>
                   Next
                   <ChevronRight className="ml-2 h-4 w-4" />
@@ -203,12 +221,12 @@ export default function TakeTestPage({ params }) {
             <CardHeader>
               <CardTitle>Question Navigator</CardTitle>
               <CardDescription>
-                {answeredQuestions} of {test.totalQuestions} questions answered
+                {answeredQuestions} of {totalQuestions} questions answered
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: test.totalQuestions }).map((_, index) => (
+                {Array.from({ length: totalQuestions }).map((_, index) => (
                   <Button
                     key={index}
                     variant={answers[index] ? "default" : "outline"}
@@ -235,7 +253,7 @@ export default function TakeTestPage({ params }) {
                     <div className="mr-2 h-3 w-3 rounded-full border border-muted-foreground"></div>
                     <span>Unanswered</span>
                   </div>
-                  <span>{test.totalQuestions - answeredQuestions}</span>
+                  <span>{totalQuestions - answeredQuestions}</span>
                 </div>
               </div>
 
