@@ -317,12 +317,6 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
           />
         </div>
         <div className="flex gap-2">
-          <Button asChild>
-            <Link href={`/create-test?classroom=${classroomId}`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Test
-            </Link>
-          </Button>
           <div className="flex gap-2">
             <Button
               variant={viewType === "list" ? "default" : "outline"}

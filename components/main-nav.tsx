@@ -16,12 +16,10 @@ export function MainNav() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
 
-  const protectedRoutes = [
+  const mainRoutes = [
     { href: "/dashboard", label: "Dashboard", active: pathname === "/dashboard" },
-    { href: "/create-test", label: "Create Test", active: pathname === "/create-test" },
     { href: "/myspace", label: "My Space", active: pathname === "/myspace" },
     { href: "/classrooms", label: "Classrooms", active: pathname === "/classrooms" || pathname.startsWith("/classrooms/") },
-    { href: "/results", label: "Results", active: pathname === "/results" },
   ]
 
   return (
@@ -40,7 +38,7 @@ export function MainNav() {
           </Link>
         </NavigationMenuItem>
 
-        {session && protectedRoutes.map((route) => (
+        {session && mainRoutes.map((route) => (
           <NavigationMenuItem key={route.href}>
             <Link href={route.href} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
