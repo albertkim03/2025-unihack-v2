@@ -9,7 +9,7 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center space-y-8 text-center">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">AI-Powered STEM Test Generator</h1>
         <p className="max-w-[700px] text-lg text-muted-foreground">
-          Create customized test papers for STEM subjects using AI. Upload source materials, select topics, and generate
+          Create customised test papers for STEM subjects using AI. Upload source materials, select topics, and generate
           tests in minutes.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
@@ -17,9 +17,6 @@ export default function Home() {
             <Link href="/login">
               Get Started <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
-          </Button>
-          <Button variant="outline" size="lg" asChild>
-            <Link href="/about">Learn More</Link>
           </Button>
         </div>
       </div>
@@ -32,7 +29,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <CardDescription>
-              Generate customized test papers by uploading source materials and selecting specific topics and question
+              Generate customised test papers by uploading source materials and selecting specific topics and question
               types.
             </CardDescription>
           </CardContent>
@@ -62,7 +59,7 @@ export default function Home() {
         <Card>
           <CardHeader>
             <BarChart3 className="h-8 w-8 text-primary" />
-            <CardTitle className="mt-4">Analyze Results</CardTitle>
+            <CardTitle className="mt-4">Analyse Results</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription>
