@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,6 +19,37 @@ export default function CreateTestPage() {
   const [currentStep, setCurrentStep] = useState("source")
   const [includeAnswers, setIncludeAnswers] = useState(true)
   const [assignmentType, setAssignmentType] = useState("personal")
+  const [file, setFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Handle file selection via button
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0]
+    if (selectedFile && selectedFile.type === "application/pdf") {
+      setFile(selectedFile)
+    } else {
+      alert("Only PDF files are allowed!")
+    }
+  }
+
+  // Handle file drop via drag & drop
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const droppedFile = event.dataTransfer.files[0]
+    if (droppedFile && droppedFile.type === "application/pdf") {
+      setFile(droppedFile)
+    } else {
+      alert("Only PDF files are allowed!")
+    }
+  }
+
+  // Prevent default drag behaviors
+  const preventDefaults = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.stopPropagation()
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -52,15 +83,46 @@ export default function CreateTestPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="border-2 border-dashed rounded-lg p-12 text-center">
+              <div className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300
+                  ${isHovered ? "border-blue-500 shadow-lg shadow-blue-300/50" : "border-gray-300"}
+                  ${isDragging ? "border-green-500 shadow-green-300/50" : ""}
+                `}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => {
+                  preventDefaults(e);
+                  setIsDragging(true);
+                }}
+                onDragEnter={preventDefaults}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
                 <div className="flex flex-col items-center">
                   <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Drag & Drop Files</h3>
-                  <p className="text-sm text-muted-foreground mb-4">or click to browse files (PDF, DOCX, TXT)</p>
+                  <h3 className="text-lg font-semibold mb-2">Drag & Drop PDF</h3>
+                  <p className="text-sm text-muted-foreground mb-4">or click to browse files (PDF)</p>
                   <Button>Select Files</Button>
                 </div>
               </div>
 
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="application/pdf"
+                onChange={handleFileChange}
+              />
+
+              {/* Display Selected File */}
+              {file && (
+                <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-center">
+                  <strong>Selected File:</strong> {file.name}
+                </div>
+              )}
+
+              {/* Textarea Input */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Or enter text directly</h3>
                 <Textarea placeholder="Paste or type your source material here..." className="min-h-[200px]" />
