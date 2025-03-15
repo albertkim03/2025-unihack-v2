@@ -154,11 +154,11 @@ export default function CreateClassroomPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="physics">Physics</SelectItem>
-                                <SelectItem value="chemistry">Chemistry</SelectItem>
-                                <SelectItem value="biology">Biology</SelectItem>
-                                <SelectItem value="mathematics">Mathematics</SelectItem>
-                                <SelectItem value="computer-science">Computer Science</SelectItem>
+                                <SelectItem value="Physics">Physics</SelectItem>
+                                <SelectItem value="Chemistry">Chemistry</SelectItem>
+                                <SelectItem value="Biology">Biology</SelectItem>
+                                <SelectItem value="Mathematics">Mathematics</SelectItem>
+                                <SelectItem value="Computer Science">Computer Science</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

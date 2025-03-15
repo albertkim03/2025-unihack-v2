@@ -1,122 +1,97 @@
+// @ts-nocheck
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, Users, BookOpen } from "lucide-react"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import prisma from "@/lib/prisma"
+import { ClassroomsClient } from "@/components/classrooms-client"
 
-export default function ClassroomsPage() {
-  const classrooms = [
-    {
-      id: "class-1",
-      name: "Physics 101",
-      description: "Introductory physics course",
-      students: 24,
-      tests: 8,
-      recent: "Mechanics Quiz",
+export default async function ClassroomsPage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session || !session.user.id) {
+    return <div>Please log in to view your classrooms</div>
+  }
+
+  // Get classrooms where the user is the owner
+  const ownedClassrooms = await prisma.classroom.findMany({
+    where: {
+      ownerId: session.user.id,
     },
-    {
-      id: "class-2",
-      name: "Advanced Chemistry",
-      description: "Senior level chemistry course",
-      students: 18,
-      tests: 12,
-      recent: "Organic Chemistry Test",
+    include: {
+      _count: {
+        select: {
+          members: true,
+          tests: true,
+        },
+      },
+      tests: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+      },
     },
-    {
-      id: "class-3",
-      name: "Biology Fundamentals",
-      description: "Core biology concepts",
-      students: 30,
-      tests: 6,
-      recent: "Cell Structure Quiz",
+    orderBy: {
+      updatedAt: "desc",
     },
-    {
-      id: "class-4",
-      name: "Calculus II",
-      description: "Advanced calculus topics",
-      students: 22,
-      tests: 10,
-      recent: "Integration Methods",
+  })
+
+  // Get classrooms where the user is a member
+  const memberClassrooms = await prisma.classroom.findMany({
+    where: {
+      members: {
+        some: {
+          userId: session.user.id,
+        },
+      },
     },
-  ]
+    include: {
+      owner: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      _count: {
+        select: {
+          members: true,
+          tests: true,
+        },
+      },
+      tests: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  })
 
-  return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Classrooms</h1>
-          <Button asChild>
-            <Link href="/classrooms/create">
-              <Plus className="mr-2 h-4 w-4" /> Create Classroom
-            </Link>
-          </Button>
-        </div>
+  // Format the data for display
+  const formatClassroom = (classroom, isOwned = true) => {
+    return {
+      id: classroom.id,
+      name: classroom.name,
+      description: classroom.description || (isOwned ? "Your classroom" : "Classroom you're enrolled in"),
+      students: classroom._count.members,
+      tests: classroom._count.tests,
+      recent: classroom.tests.length > 0 ? classroom.tests[0].title : "No tests yet",
+      owner: isOwned ? null : `${classroom.owner.firstName} ${classroom.owner.lastName}`,
+    }
+  }
 
-        <div className="flex items-center mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Search classrooms..." className="pl-8" />
-          </div>
-        </div>
+  const formattedOwnedClassrooms = ownedClassrooms.map((c) => formatClassroom(c, true))
+  const formattedMemberClassrooms = memberClassrooms.map((c) => formatClassroom(c, false))
 
-        <Tabs defaultValue="my-classrooms" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="my-classrooms">
-              <BookOpen className="mr-2 h-4 w-4" />
-              My Classrooms
-            </TabsTrigger>
-          </TabsList>
+  // Combine all classrooms for the client component
+  const allClassrooms = {
+    owned: formattedOwnedClassrooms,
+    member: formattedMemberClassrooms,
+  }
 
-          <TabsContent value="my-classrooms">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {classrooms.map((classroom) => (
-                  <Card key={classroom.id}>
-                    <CardHeader>
-                      <CardTitle>{classroom.name}</CardTitle>
-                      <CardDescription>{classroom.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center space-x-4">
-                        <div className="flex -space-x-2">
-                          {[...Array(3)].map((_, i) => (
-                              <Avatar key={i} className="border-2 border-background">
-                                <AvatarImage src={`/placeholder.svg?height=32&width=32&text=${i + 1}`} />
-                                <AvatarFallback>S{i + 1}</AvatarFallback>
-                              </Avatar>
-                          ))}
-                          {classroom.students > 3 && (
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-xs font-medium">
-                                +{classroom.students - 3}
-                              </div>
-                          )}
-                        </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Users className="mr-1 h-4 w-4" />
-                          {classroom.students} students
-                        </div>
-                      </div>
-                      <div className="mt-4 text-sm">
-                        <p>
-                          <strong>Tests:</strong> {classroom.tests}
-                        </p>
-                        <p>
-                          <strong>Recent:</strong> {classroom.recent}
-                        </p>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" asChild className="w-full">
-                        <Link href={`/classrooms/${classroom.id}`}>View Classroom</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-  )
+  return <ClassroomsClient initialClassrooms={allClassrooms} />
 }
 

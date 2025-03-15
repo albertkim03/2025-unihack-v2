@@ -24,6 +24,15 @@ export async function GET() {
                         tests: true,
                     },
                 },
+                tests: {
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                    take: 1,
+                    select: {
+                        title: true,
+                    },
+                },
             },
             orderBy: {
                 updatedAt: "desc",
@@ -52,6 +61,15 @@ export async function GET() {
                         tests: true,
                     },
                 },
+                tests: {
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                    take: 1,
+                    select: {
+                        title: true,
+                    },
+                },
             },
             orderBy: {
                 updatedAt: "desc",
@@ -67,4 +85,3 @@ export async function GET() {
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }
-
