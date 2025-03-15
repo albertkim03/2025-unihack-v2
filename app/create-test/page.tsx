@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,7 @@ import { TestPreview } from "@/components/test-preview"
 import { ClassroomSelector } from "@/components/classroom-selector"
 
 export default function CreateTestPage() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState("source")
   const [includeAnswers, setIncludeAnswers] = useState(true)
   const [assignmentType, setAssignmentType] = useState("personal")
@@ -129,7 +131,7 @@ export default function CreateTestPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={() => router.push("/myspace")}>Cancel</Button>
               <Button onClick={() => setCurrentStep("configure")}>Continue</Button>
             </CardFooter>
           </Card>
@@ -184,6 +186,10 @@ export default function CreateTestPage() {
                   type="number"
                   min="1"
                   step="1"
+                  pattern="[0-9]*"
+                  onInput={(e) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '')
+                  }}
                   placeholder="e.g., 60"
                   className="w-full md:w-1/3"
                 />
