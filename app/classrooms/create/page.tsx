@@ -214,16 +214,6 @@ export default function CreateClassroomPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <Tabs value={inviteMethod} onValueChange={setInviteMethod}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="email">
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email Invites
-                      </TabsTrigger>
-                      <TabsTrigger value="link">
-                        <LinkIcon className="mr-2 h-4 w-4" />
-                        Invite Link
-                      </TabsTrigger>
-                    </TabsList>
 
                     <TabsContent value="email" className="space-y-4 pt-4">
                       <div className="space-y-2">
@@ -243,61 +233,10 @@ export default function CreateClassroomPage() {
                         </Button>
                       </div>
                     </TabsContent>
-
-                    <TabsContent value="link" className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label>Shareable Invite Link</Label>
-                        <div className="flex items-center">
-                          <Input
-                              readOnly
-                              value="https://stem-test-generator.app/invite/abc123"
-                              className="rounded-r-none"
-                          />
-                          <Button
-                              type="button"
-                              variant="secondary"
-                              className="rounded-l-none"
-                              size="icon"
-                              onClick={handleCopyLink}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">Anyone with this link can join your classroom</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Link Expiry</Label>
-                        <Select defaultValue="7days">
-                          <SelectTrigger id="expiry">
-                            <SelectValue placeholder="Select expiry time" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="24hours">24 Hours</SelectItem>
-                            <SelectItem value="7days">7 Days</SelectItem>
-                            <SelectItem value="30days">30 Days</SelectItem>
-                            <SelectItem value="never">Never</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </TabsContent>
                   </Tabs>
 
                   <Separator />
 
-                  <div className="space-y-2">
-                    <Label>Student Permissions</Label>
-                    <Select defaultValue="view-only">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select permissions" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="view-only">View Only (Take Tests)</SelectItem>
-                        <SelectItem value="contribute">Contribute (Submit Questions)</SelectItem>
-                        <SelectItem value="collaborate">Collaborate (Create Tests)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </CardContent>
               </Card>
             </div>

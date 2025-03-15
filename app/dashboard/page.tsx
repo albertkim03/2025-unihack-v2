@@ -39,7 +39,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Tests completed this month</p>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Score</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
@@ -48,20 +48,20 @@ export default function DashboardPage() {
             <div className="text-2xl font-bold">76%</div>
             <p className="text-xs text-muted-foreground">Across all subjects</p>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <Tabs defaultValue="recent" className="mt-8">
         <TabsList>
           <TabsTrigger value="recent">Recent Tests</TabsTrigger>
-          <TabsTrigger value="classrooms">My Classrooms</TabsTrigger>
+          {/* <TabsTrigger value="classrooms">My Classrooms</TabsTrigger> */}
         </TabsList>
         <TabsContent value="recent" className="mt-4">
           <RecentTests />
         </TabsContent>
-        <TabsContent value="classrooms" className="mt-4">
+        {/* <TabsContent value="classrooms" className="mt-4">
           <ClassroomOverview />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )

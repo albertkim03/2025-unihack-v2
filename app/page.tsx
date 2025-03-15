@@ -56,7 +56,7 @@ export default function Home() {
             </CardDescription>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardHeader>
             <BarChart3 className="h-8 w-8 text-primary" />
             <CardTitle className="mt-4">Analyse Results</CardTitle>
@@ -66,7 +66,7 @@ export default function Home() {
               View performance statistics, including average scores by subject, and track progress over time.
             </CardDescription>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   )
