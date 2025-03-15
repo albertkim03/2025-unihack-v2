@@ -17,22 +17,9 @@ export async function GET() {
             where: {
                 ownerId: session.user.id,
             },
-            include: {
-                _count: {
-                    select: {
-                        members: true,
-                        tests: true,
-                    },
-                },
-                tests: {
-                    orderBy: {
-                        createdAt: "desc",
-                    },
-                    take: 1,
-                    select: {
-                        title: true,
-                    },
-                },
+            select: {
+                name: true,
+                id: true,
             },
             orderBy: {
                 updatedAt: "desc",
@@ -48,28 +35,30 @@ export async function GET() {
                     },
                 },
             },
-            include: {
-                owner: {
-                    select: {
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-                _count: {
-                    select: {
-                        members: true,
-                        tests: true,
-                    },
-                },
-                tests: {
-                    orderBy: {
-                        createdAt: "desc",
-                    },
-                    take: 1,
-                    select: {
-                        title: true,
-                    },
-                },
+            select: {
+                name: true,
+                id: true,
+                // owner: {
+                //     select: {
+                //         firstName: true,
+                //         lastName: true,
+                //     },
+                // },
+                // _count: {
+                //     select: {
+                //         members: true,
+                //         tests: true,
+                //     },
+                // },
+                // tests: {
+                //     orderBy: {
+                //         createdAt: "desc",
+                //     },
+                //     take: 1,
+                //     select: {
+                //         title: true,
+                //     },
+                // },
             },
             orderBy: {
                 updatedAt: "desc",

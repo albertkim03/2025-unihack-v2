@@ -20,6 +20,7 @@ import { ClassroomSelector } from "@/components/classroom-selector"
 import { useToast } from "@/components/ui/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import * as pdfjsLib from 'pdfjs-dist/webpack';
+import {createTest} from "../actions/test";
 
 
 // Ensure workerSrc is set
@@ -31,6 +32,7 @@ const testSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
   topics: z.string().min(1, "At least one topic is required"),
   questionCount: z.number().min(1, "At least one question is required"),
+  duration: z.number().min(5, "Duration must be at least 5 minutes"),
   includeAnswers: z.boolean(),
   questionTypes: z
       .object({
@@ -49,36 +51,45 @@ const testSchema = z.object({
 })
 
 const extractTextFromPDF = async (file: File): Promise<string> => {
+  if (file == null) {
+    return Promise.resolve("")
+  }
+
   const reader = new FileReader();
 
-  return new Promise((resolve, reject) => {
-    reader.readAsArrayBuffer(file);
+  try {
+    return new Promise((resolve, reject) => {
+      reader.readAsArrayBuffer(file);
 
-    reader.onload = async function () {
-      if (!reader.result) {
-        reject("Failed to read file");
-        return;
-      }
-
-      try {
-        const pdfData = new Uint8Array(reader.result as ArrayBuffer);
-        const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-
-        let extractedText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          extractedText += content.items.map((item: any) => item.str).join(" ") + "\n";
+      reader.onload = async function () {
+        if (!reader.result) {
+          reject("Failed to read file");
+          return;
         }
 
-        resolve(extractedText);
-      } catch (error) {
-        reject(`Error extracting text: ${error}`);
-      }
-    };
+        try {
+          const pdfData = new Uint8Array(reader.result as ArrayBuffer);
+          const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
-    reader.onerror = () => reject("File reading error");
-  });
+          let extractedText = "";
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            extractedText += content.items.map((item: any) => item.str).join(" ") + "\n";
+          }
+
+          resolve(extractedText);
+        } catch (error) {
+          reject(`Error extracting text: ${error}`);
+        }
+      };
+
+      reader.onerror = () => reject("File reading error");
+    });
+  } catch (e) {
+    return Promise.resolve("")
+  }
+
 };
 
 
@@ -97,6 +108,7 @@ export default function CreateTestPage() {
   const [error, setError] = useState("")
   const [selectedFile, setSelectedFile] = useState(null)
   const [sourceText, setSourceText] = useState("")
+  const [testDuration, setTestDuration] = useState(40)
 
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -223,6 +235,7 @@ export default function CreateTestPage() {
   const handleSubmit = async () => {
     try {
       const content = await extractTextFromPDF(file)
+      const content2 = content + sourceText
 
       // Validate the entire form
       const formData = {
@@ -231,7 +244,9 @@ export default function CreateTestPage() {
         topics,
         questionCount,
         questionTypes,
-        content
+        content: content2,
+        classroomId,
+        duration: testDuration,
       }
 
       setIsSubmitting(true)
@@ -278,15 +293,15 @@ export default function CreateTestPage() {
         body: JSON.stringify(formData),
       })
 
-      // console.log(response.json())
-
       const data = await response.json()
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to create test")
       }
 
-      console.log("YAY " + JSON.parse(data).questions)
+      const questions = JSON.parse(data)
+
+      const resp = await createTest(questions, formData)
       toast({
         title: "Success!",
         description: "Your test has been created successfully.",
@@ -466,6 +481,31 @@ export default function CreateTestPage() {
                   </div>
                 </div>
 
+
+                <div className="space-y-4">
+                  <Label>Test Duration (minutes)</Label>
+                  <div className="flex items-center space-x-4">
+                    <Slider
+                        value={[testDuration]}
+                        onValueChange={(values) => setTestDuration(values[0])}
+                        min={5}
+                        max={180}
+                        step={5}
+                        className="flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                          type="number"
+                          value={testDuration}
+                          onChange={(e) => setTestDuration(Number(e.target.value))}
+                          className="w-20"
+                          min={5}
+                      />
+                      <span>min</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Question Types</Label>
                   <div className="grid gap-2 md:grid-cols-3">
@@ -528,20 +568,6 @@ export default function CreateTestPage() {
                   {assignmentType === "classroom" && (
                       <div className="space-y-4 pt-4">
                         <ClassroomSelector value={classroomId} onChange={setClassroomId} />
-
-                        <div className="space-y-2">
-                          <Label>Test Visibility</Label>
-                          <div className="grid gap-2">
-                            <div className="flex items-center space-x-2">
-                              <Checkbox id="show-marks" checked={showMarks} onCheckedChange={setShowMarks} />
-                              <Label htmlFor="show-marks">Show marks to students</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Checkbox id="show-answers" checked={showAnswers} onCheckedChange={setShowAnswers} />
-                              <Label htmlFor="show-answers">Show correct answers after completion</Label>
-                            </div>
-                          </div>
-                        </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="due-date">Due Date (Optional)</Label>

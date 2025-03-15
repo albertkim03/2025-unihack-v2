@@ -163,10 +163,11 @@ export async function POST(request) {
     {
       "text": "The question text",
       "type": "multiple-choice | true-false | short-answer",
-      "options": {"A": "option 1", "B": "option 2", "C": "option 3", "D": "option 4"} (only for multiple-choice or true-false),
-      "answer": "Correct answer",
+      "options": ["option 1", "option 2", "option 3", "option 4"] (only for multiple-choice or true-false),
+      "answer": "Correct answer" (give the 0-index position of the correct option for multiple choice / true false, give an exemplar sample answer for short answer question),
       "points": 1 (or allocated marks for short-answer based on context)
     }
+    The overall format MUST be {"questions": [{question1}, {question2}]}
     you MUST just answer with the json data beginning with { and ending with }`;
 
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
