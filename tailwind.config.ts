@@ -10,10 +10,6 @@ export default {
   theme: {
   	extend: {
   		colors: {
-			purple: {
-				light: '#8A70F6',
-				dark: '#7E66E4',
-			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
