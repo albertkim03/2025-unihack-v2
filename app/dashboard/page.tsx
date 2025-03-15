@@ -10,6 +10,22 @@ import { ClassroomOverview } from "@/components/classroom-overview";
 import { fetchUserSession } from "./actions";
 import { isSameMonth } from "date-fns";
 
+interface Classroom {
+  id: string;
+  name: string;
+  description: string;
+  subject: string;
+  students: number;
+  tests: number;
+  recentTest?: {
+    name: string;
+    date: string;
+  };
+  owner?: {
+    name: string;
+  };
+}
+
 export default function DashboardPage() {
   const [session, setSession] = useState(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -21,6 +37,7 @@ export default function DashboardPage() {
   const [lowestScore, setLowestScore] = useState<number | string>("-");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -35,20 +52,40 @@ export default function DashboardPage() {
           throw new Error("User session not found.");
         }
 
-        // Fetch test data
-        const [createdRes, assignedRes] = await Promise.all([
+        // Fetch test data and classroom data in parallel
+        const [createdRes, assignedRes, classroomsRes] = await Promise.all([
           fetch(`/api/tests?type=created`),
           fetch(`/api/tests?type=assigned`),
+          fetch('/api/classrooms')
         ]);
 
-        if (!createdRes.ok || !assignedRes.ok) {
-          throw new Error("Failed to fetch test data");
+        if (!createdRes.ok || !assignedRes.ok || !classroomsRes.ok) {
+          throw new Error("Failed to fetch data");
         }
 
-        const [createdData, assignedData] = await Promise.all([
+        const [createdData, assignedData, classroomsData] = await Promise.all([
           createdRes.json(),
           assignedRes.json(),
+          classroomsRes.json()
         ]);
+
+        // Format and combine owned and member classrooms
+        const formattedClassrooms = [
+          ...(classroomsData.owned || []).map(classroom => ({
+            ...classroom,
+            description: classroom.description || "Your classroom",
+            students: classroom._count?.members || 0,
+            tests: classroom._count?.tests || 0
+          })),
+          ...(classroomsData.member || []).map(classroom => ({
+            ...classroom,
+            description: classroom.description || "Classroom you're enrolled in",
+            students: classroom._count?.members || 0,
+            tests: classroom._count?.tests || 0,
+            owner: classroom.owner ? `${classroom.owner.firstName} ${classroom.owner.lastName}` : "Unknown"
+          }))
+        ];
+        setClassrooms(formattedClassrooms);
 
         const allTests = [...createdData, ...assignedData];
         setTotalTests(allTests.length || "-");
@@ -74,7 +111,6 @@ export default function DashboardPage() {
         setHighestScore(scores.length > 0 ? Math.round(Math.max(...scores)) : "-");
         setLowestScore(scores.length > 0 ? Math.round(Math.min(...scores)) : "-");
 
-        // ✅ Calculate average score **for this month only**
         const currentMonthScores = completedTestsData
           .filter((test) => test.completedAt && isSameMonth(new Date(test.completedAt), new Date()))
           .map((test) => test.score);
@@ -86,7 +122,7 @@ export default function DashboardPage() {
         );
 
       } catch (err) {
-        console.error("Error fetching test stats:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load dashboard data.");
       } finally {
         setLoading(false);
@@ -170,6 +206,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
       {/* Recent Tests & Classroom Overview */}
       <Tabs defaultValue="recent" className="mt-8">
         <TabsList>
@@ -180,7 +217,7 @@ export default function DashboardPage() {
           <RecentTests />
         </TabsContent>
         <TabsContent value="classrooms" className="mt-4">
-          <ClassroomOverview classrooms={[]} />
+          <ClassroomOverview classrooms={classrooms} />
         </TabsContent>
       </Tabs>
     </div>
