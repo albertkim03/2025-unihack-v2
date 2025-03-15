@@ -1,69 +1,77 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, FileText } from "lucide-react"
-import Link from "next/link"
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, FileText } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
 
 interface AssignedTestsListProps {
-  viewType: string
+  viewType: string;
 }
 
+type TestItem = {
+  id: string;
+  name: string;
+  subject: string;
+  assignedBy: string;
+  dueDate: string;
+  status: string;
+  classroom: string;
+  score?: string;
+};
+
 export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
-  const assignedTests = [
-    {
-      id: "TEST-2001",
-      name: "Physics: Quantum Mechanics",
-      subject: "Physics",
-      assignedBy: "Prof. Richard Feynman",
-      dueDate: "Mar 20, 2025",
-      status: "Pending",
-    classroom: "Advanced Physics",
-    },
-    {
-      id: "TEST-2002",
-      name: "Chemistry: Thermodynamics",
-      subject: "Chemistry",
-      assignedBy: "Dr. Marie Curie",
-      dueDate: "Mar 18, 2025",
-      status: "Completed",
-      classroom: "Chemistry 201",
-      score: "92%",
-    },
-    {
-      id: "TEST-2003",
-      name: "Biology: Evolution",
-      subject: "Biology",
-      assignedBy: "Dr. Charles Darwin",
-      dueDate: "Mar 15, 2025",
-      status: "Completed",
-      classroom: "Biology 101",
-      score: "88%",
-    },
-    {
-      id: "TEST-2004",
-      name: "Mathematics: Linear Algebra",
-      subject: "Mathematics",
-      assignedBy: "Prof. Ada Lovelace",
-      dueDate: "Mar 22, 2025",
-      status: "Pending",
-      classroom: "Advanced Mathematics",
-    },
-    {
-      id: "TEST-2005",
-      name: "Computer Science: Algorithms",
-      subject: "Computer Science",
-      assignedBy: "Dr. Alan Turing",
-      dueDate: "Mar 16, 2025",
-      status: "Overdue",
-      classroom: "CS Fundamentals",
-    },
-  ]
+  const [tests, setTests] = useState<TestItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchTests() {
+      try {
+        const res = await fetch(`/api/tests?type=assigned`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch assigned tests");
+        }
+        const data = await res.json();
+        console.log("Fetched assigned tests:", data);
+
+        const formattedTests = data.map((test: any) => ({
+          id: test.id,
+          name: test.name || "Untitled Test",
+          subject: test.subject || "No Subject",
+          assignedBy: `${test.creator.firstName} ${test.creator.lastName}` || "Unknown",
+          classroom: test.classroom?.name || "No Classroom",
+          dueDate: test.dueDate ? format(new Date(test.dueDate), "MMM dd, yyyy") : "No Due Date",
+          status: test.results.length > 0
+            ? test.results[0].completedAt
+              ? "Completed"
+              : "Pending"
+            : "Pending",
+          score: test.results.length > 0 ? `${test.results[0].score}%` : undefined,
+        }));
+
+        setTests(formattedTests);
+      } catch (err) {
+        console.error("Error fetching assigned tests:", err);
+        setError("Failed to load assigned tests.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTests();
+  }, []);
+
+  if (loading) return <p>Loading assigned tests...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   if (viewType === "grid") {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {assignedTests.map((test) => (
+        {tests.map((test) => (
           <Card key={test.id} className="flex flex-col h-full">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
@@ -104,7 +112,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
               )}
             </CardContent>
             <CardFooter className="flex justify-end gap-2 pt-4 mt-auto">
-              {test.status === "Pending" || test.status === "Overdue" ? (
+              {test.status === "Pending" ? (
                 <Button asChild>
                   <Link href={`/take-test/${test.id}`}>
                     <FileText className="mr-2 h-4 w-4" />
@@ -123,7 +131,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -141,7 +149,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {assignedTests.map((test) => (
+          {tests.map((test) => (
             <TableRow key={test.id}>
               <TableCell className="font-medium">{test.name}</TableCell>
               <TableCell>{test.subject}</TableCell>
@@ -158,7 +166,7 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                {test.status === "Pending" || test.status === "Overdue" ? (
+                {test.status === "Pending" ? (
                   <Button variant="default" size="sm" asChild>
                     <Link href={`/take-test/${test.id}`}>
                       <FileText className="mr-2 h-4 w-4" />
@@ -183,6 +191,5 @@ export function AssignedTestsList({ viewType }: AssignedTestsListProps) {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
-
