@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Share, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Eye, Share, MoreHorizontal, Edit, Trash2, FileText } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 
@@ -95,25 +95,30 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between gap-2">
+            <CardFooter className="flex flex-wrap gap-2">
+              {/* Take Test Button always appears */}
+              <Button asChild>
+                <Link href={`/take-test/${test.id}`}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Take Test
+                </Link>
+              </Button>
               <Button variant="outline" size="sm">
                 <Edit className="mr-2 h-3 w-3" />
                 Edit
               </Button>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Share className="h-4 w-4" />
-                  <span className="sr-only">Share</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More</span>
-                </Button>
-              </div>
+              <Button variant="ghost" size="icon">
+                <Eye className="h-4 w-4" />
+                <span className="sr-only">View</span>
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Share className="h-4 w-4" />
+                <span className="sr-only">Share</span>
+              </Button>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">More</span>
+              </Button>
             </CardFooter>
           </Card>
         ))}
@@ -143,10 +148,19 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
               <TableCell>{test.createdAt}</TableCell>
               <TableCell>{test.questions}</TableCell>
               <TableCell>
-                <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
+                <Badge variant={test.status === "Published" ? "default" : "outline"}>
+                  {test.status}
+                </Badge>
               </TableCell>
               <TableCell>{test.shared ? "Yes" : "No"}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right flex gap-2 justify-end">
+                {/* Take Test Button always appears */}
+                <Button asChild>
+                  <Link href={`/take-test/${test.id}`}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Take Test
+                  </Link>
+                </Button>
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/edit-test/${test.id}`}>
                     <Edit className="h-4 w-4" />
