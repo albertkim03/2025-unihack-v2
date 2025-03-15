@@ -13,46 +13,83 @@ type TestItem = {
   subject: string;
   createdAt: string;
   status: string;
-  answeredQuestions: number;
+  answeredQuestions: string; // Now a string to allow "-/{totalQuestions}"
   totalQuestions: number;
 };
 
 export function RecentTests() {
   const [tests, setTests] = useState<TestItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTests() {
       try {
-        const res = await fetch(`/api/tests?type=created`);
-        if (!res.ok) {
+        // Fetch both "created" and "assigned" tests
+        const [createdRes, assignedRes] = await Promise.all([
+          fetch(`/api/tests?type=created`),
+          fetch(`/api/tests?type=assigned`)
+        ]);
+
+        if (!createdRes.ok || !assignedRes.ok) {
           throw new Error("Failed to fetch tests");
         }
-        const data = await res.json();
-        console.log(data);
 
-        // Format API response
-        const formattedTests = data.map((test: any) => ({
-          id: test.id,
-          name: test.name || "Untitled Test",
-          subject: test.subject || "No Subject",
-          createdAt: test.createdAt || "Unknown",
-          status: test.results?.length > 0 ? "Completed" : "Assigned",
-          answeredQuestions: test.results?.[0]?.score ?? 0, // 👈 This line is causing the error
-          totalQuestions: test._count?.questions ?? 0,
-        }));
+        const [createdData, assignedData] = await Promise.all([
+          createdRes.json(),
+          assignedRes.json()
+        ]);
 
-        setTests(formattedTests);
-      } catch (error) {
-        console.error("Error fetching tests:", error);
+        console.log("Created Tests:", createdData);
+        console.log("Assigned Tests:", assignedData);
+
+        // Combine both lists & sort by createdAt (newest first)
+        const allTests = [...createdData, ...assignedData].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        // Query each test for the user's test result
+        const userId = "currentUserId"; // Replace with actual userId retrieval logic
+        const enrichedTests = await Promise.all(
+          allTests.map(async (test) => {
+            let answeredQuestions = "-";
+            if (test.results && test.results.length > 0) {
+              answeredQuestions = test.results[0]?.score ?? "0";
+            } else {
+              // Fetch user's test result from API
+              const testResultRes = await fetch(`/api/tests/${test.id}/results/${userId}`);
+              if (testResultRes.ok) {
+                const testResult = await testResultRes.json();
+                answeredQuestions = testResult ? `${testResult.score}` : "-";
+              }
+            }
+
+            return {
+              id: test.id,
+              name: test.name || "Untitled Test",
+              subject: test.subject || "No Subject",
+              createdAt: test.createdAt || new Date().toISOString(),
+              status: test.results?.length > 0 ? "Completed" : "Assigned",
+              answeredQuestions: `${answeredQuestions}/${test._count?.questions ?? 0}`,
+              totalQuestions: test._count?.questions ?? 0,
+            };
+          })
+        );
+
+        setTests(enrichedTests);
+      } catch (err) {
+        console.error("Error fetching tests:", err);
+        setError("Failed to load tests.");
       } finally {
         setLoading(false);
       }
     }
+
     fetchTests();
   }, []);
 
   if (loading) return <p>Loading tests...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="rounded-md border">
@@ -80,13 +117,15 @@ export function RecentTests() {
                       ? "outline"
                       : test.status === "Completed"
                       ? "default"
-                      : "secondary"
+                      : test.status === "Created"
+                      ? "secondary"
+                      : "destructive"
                   }
                 >
                   {test.status}
                 </Badge>
               </TableCell>
-              <TableCell>{`${test.answeredQuestions}/${test.totalQuestions}`}</TableCell>
+              <TableCell>{test.answeredQuestions}</TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon">
                   <Eye className="h-4 w-4" />
@@ -95,6 +134,10 @@ export function RecentTests() {
                 <Button variant="ghost" size="icon">
                   <FileText className="h-4 w-4" />
                   <span className="sr-only">View results</span>
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">More options</span>
                 </Button>
               </TableCell>
             </TableRow>
