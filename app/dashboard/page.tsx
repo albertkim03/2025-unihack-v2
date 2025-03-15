@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { RecentTests } from "@/components/recent-tests"
@@ -10,6 +9,7 @@ import { ClassroomOverview } from "@/components/classroom-overview"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-3">
+      <div className="mt-8 grid gap-6 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Tests</CardTitle>
@@ -86,6 +86,35 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted-foreground">Across all subjects</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div>
+      <Card className="mb-8">
+        <CardHeader className="pb-2">
+          <CardTitle>Results Summary</CardTitle>
+          <CardDescription>Overview of all test results</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">Total Tests</span>
+              <span className="text-3xl font-bold">48</span>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">Average Score</span>
+              <span className="text-3xl font-bold">76%</span>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">Highest Score</span>
+              <span className="text-3xl font-bold">98%</span>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <span className="text-sm font-medium text-muted-foreground">Lowest Score</span>
+              <span className="text-3xl font-bold">42%</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       </div>
 
       <Tabs defaultValue="recent" className="mt-8">
