@@ -27,10 +27,10 @@ model Classroom {
   name        String
   description String?
   subject     String
-  gradeLevel  String
-  joinCode    String            @unique
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  gradeLevel  String?
+  joinCode    String?            @unique
+  createdAt   DateTime?          @default(now())
+  updatedAt   DateTime?          @updatedAt
   owner       User              @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
   members     ClassroomMember[]
@@ -40,7 +40,7 @@ model Classroom {
 model ClassroomMember {
   id          String    @id @default(cuid())
   role        String    @default("student") // student, teaching-assistant, co-teacher
-  joinedAt    DateTime  @default(now())
+  joinedAt    DateTime?  @default(now())
   classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   classroomId String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,11 +54,11 @@ model Test {
   name        String
   description String?
   subject     String
-  timeLimit   Int // in minutes
+  timeLimit   Int? // in minutes
   dueDate     DateTime?
-  status      String       @default("draft") // draft, active, completed, archived
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  status      String?       @default("draft") // draft, active, completed, archived
+  createdAt   DateTime?     @default(now())
+  updatedAt   DateTime?     @updatedAt
   creator     User         @relation("TestCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   creatorId   String
   classroom   Classroom?   @relation(fields: [classroomId], references: [id], onDelete: SetNull)
