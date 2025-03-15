@@ -54,6 +54,16 @@ export async function GET(request: Request) {
                             results: true,
                         },
                     },
+                    results: {
+                        where: {
+                            userId: session.user.id,
+                        },
+                        select: {
+                            id: true,
+                            score: true,
+                            completedAt: true,
+                        },
+                    },
                 },
                 orderBy: {
                     updatedAt: "desc",

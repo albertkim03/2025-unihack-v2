@@ -7,16 +7,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Share, MoreHorizontal, Edit, Trash2, Copy, FileText } from "lucide-react";
+// Removed unused icons: Eye, MoreHorizontal, FileText, Share
 import Link from "next/link";
 import { format } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface PersonalTestsListProps {
   viewType: string;
@@ -61,14 +54,14 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
           subject: test.subject || "No Subject",
           createdAt: test.createdAt ? format(new Date(test.createdAt), "MMM dd, yyyy") : "Unknown",
           questions: test._count?.questions ?? 0,
-          status: test.status || "Draft",
+          // Updated status logic to mimic assigned tests:
+          status: test.results && test.results.length > 0 
+                    ? (test.results[0].completedAt ? "Completed" : "Pending")
+                    : "Pending",
           shared: test.shared ?? false,
-          score:
-            test.results && test.results.length > 0
-              ? `${test.results[0].score}%`
-              : "-", // Display a dash if no score available
+          score: test.results && test.results.length > 0 ? `${test.results[0].score}%` : "-",
         }));
-
+        
         setTests(formattedTests);
       } catch (err) {
         console.error("Error fetching tests:", err);
@@ -91,7 +84,9 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg">{test.name}</CardTitle>
-                <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
+                <Badge variant={test.status === "Completed" ? "outline" : "secondary"}>
+                  {test.status}
+                </Badge>
               </div>
               <CardDescription>{test.createdAt}</CardDescription>
             </CardHeader>
@@ -116,38 +111,11 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
               </div>
             </CardContent>
             <CardFooter>
-              <div className="flex w-full items-center gap-2">
-                <Button asChild className="flex-1">
-                  <Link href={`/take-test/${test.id}`}>Take Test</Link>
-                </Button>
-                <Button asChild className="flex-1">
-                  <Link href={`/test-details/${test.id}`}>View Details</Link>
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/edit-test/${test.id}`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <Button asChild className="default">
+                <Link href={test.status === "Completed" ? `/test-results/${test.id}` : `/take-test/${test.id}`}>
+                  {test.status === "Completed" ? "View Results" : "Take Test"}
+                </Link>
+              </Button>
             </CardFooter>
           </Card>
         ))}
@@ -178,44 +146,18 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
               <TableCell>{test.createdAt}</TableCell>
               <TableCell>{test.questions}</TableCell>
               <TableCell>
-                <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
+                <Badge variant={test.status === "Completed" ? "outline" : "secondary"}>
+                  {test.status}
+                </Badge>
               </TableCell>
               <TableCell>{test.score}</TableCell>
               <TableCell>{test.shared ? "Yes" : "No"}</TableCell>
               <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button asChild variant="default" size="sm">
-                    <Link href={`/take-test/${test.id}`}>Take Test</Link>
-                  </Button>
-                  <Button asChild variant="ghost" size="icon">
-                    <Link href={`/test-details/${test.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="ghost" size="icon">
-                    <Link href={`/edit-test/${test.id}`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                <Button asChild variant="default">
+                  <Link href={test.status === "Completed" ? `/test-results/${test.id}` : `/take-test/${test.id}`}>
+                    {test.status === "Completed" ? "View Results" : "Take Test"}
+                  </Link>
+                </Button>
               </TableCell>
             </TableRow>
           ))}
