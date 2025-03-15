@@ -89,7 +89,7 @@ export default function AccountPage() {
                           {session?.user?.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="space-y-2">
+                      <div className="flex flex-col gap-2">
                         <Button size="sm">Change Avatar</Button>
                         <Button size="sm" variant="outline">
                           Remove

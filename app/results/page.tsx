@@ -13,10 +13,6 @@ export default function ResultsPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Test Results</h1>
-        <Button variant="outline">
-          <Download className="mr-2 h-4 w-4" />
-          Export Results
-        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">

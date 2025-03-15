@@ -70,7 +70,7 @@ export default function CreateTestPage() {
           </TabsTrigger>
           <TabsTrigger value="assign">
             <CheckCircle className="mr-2 h-4 w-4" />
-            Review & Assign
+            Assign
           </TabsTrigger>
         </TabsList>
 
@@ -178,6 +178,18 @@ export default function CreateTestPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="time-limit">Time Limit (minutes)</Label>
+                <Input
+                  id="time-limit"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="e.g., 60"
+                  className="w-full md:w-1/3"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label>Question Types</Label>
                 <div className="grid gap-2 md:grid-cols-3">
                   <div className="flex items-center space-x-2">
@@ -217,13 +229,13 @@ export default function CreateTestPage() {
         </TabsContent>
 
         <TabsContent value="assign" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+          <div className="grid h-full">
+            <Card className="flex flex-col">
               <CardHeader>
                 <CardTitle>Test Assignment</CardTitle>
                 <CardDescription>Choose how you want to assign this test</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="flex-1 space-y-6">
                 <RadioGroup value={assignmentType} onValueChange={setAssignmentType} className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="personal" id="personal" />
@@ -260,24 +272,13 @@ export default function CreateTestPage() {
                   </div>
                 )}
               </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep("configure")}>
+                  Back
+                </Button>
+                <Button>Generate & {assignmentType === "classroom.ts" ? "Assign" : "Save"}</Button>
+              </CardFooter>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Test Preview</CardTitle>
-                <CardDescription>Preview how your test will look</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TestPreview />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button variant="outline" onClick={() => setCurrentStep("configure")}>
-              Back
-            </Button>
-            <Button>Generate & {assignmentType === "classroom.ts" ? "Assign" : "Save"}</Button>
           </div>
         </TabsContent>
       </Tabs>
