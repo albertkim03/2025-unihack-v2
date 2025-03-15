@@ -10,12 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Eye, Share, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Copy } from "lucide-react";
 
 interface PersonalTestsListProps {
   viewType: string;
+  searchQuery: string;
+  selectedSubject: string;
 }
 
-type TestItem = {
+interface TestItem {
   id: string;
   name: string;
   subject: string;
@@ -23,9 +27,9 @@ type TestItem = {
   questions: number;
   status: string;
   shared: boolean;
-};
+}
 
-export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
+export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: PersonalTestsListProps) {
   const [tests, setTests] = useState<TestItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,12 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
   useEffect(() => {
     async function fetchTests() {
       try {
-        const res = await fetch(`/api/tests?type=created`);
+        const queryParams = new URLSearchParams({
+          type: 'created',
+          search: searchQuery,
+          subject: selectedSubject
+        });
+        const res = await fetch(`/api/tests?${queryParams}`);
         if (!res.ok) {
           throw new Error("Failed to fetch tests");
         }
@@ -59,7 +68,7 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
       }
     }
     fetchTests();
-  }, []);
+  }, [searchQuery, selectedSubject]);
 
   if (loading) return <p>Loading tests...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -95,24 +104,35 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between gap-2">
-              <Button variant="outline" size="sm">
-                <Edit className="mr-2 h-3 w-3" />
-                Edit
-              </Button>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View</span>
+            <CardFooter>
+              <div className="flex w-full items-center gap-2">
+                <Button asChild className="flex-1">
+                  <Link href={`/test-details/${test.id}`}>View Details</Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Share className="h-4 w-4" />
-                  <span className="sr-only">Share</span>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href={`/edit-test/${test.id}`}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Duplicate
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </CardFooter>
           </Card>
@@ -126,7 +146,7 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Test Name</TableHead>
+            <TableHead>Name</TableHead>
             <TableHead>Subject</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Questions</TableHead>
@@ -138,7 +158,7 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
         <TableBody>
           {tests.map((test) => (
             <TableRow key={test.id}>
-              <TableCell className="font-medium">{test.name}</TableCell>
+              <TableCell>{test.name}</TableCell>
               <TableCell>{test.subject}</TableCell>
               <TableCell>{test.createdAt}</TableCell>
               <TableCell>{test.questions}</TableCell>
@@ -147,24 +167,36 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
               </TableCell>
               <TableCell>{test.shared ? "Yes" : "No"}</TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/edit-test/${test.id}`}>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Share className="h-4 w-4" />
-                  <span className="sr-only">Share</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                  <Button asChild variant="ghost" size="icon">
+                    <Link href={`/test-details/${test.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="ghost" size="icon">
+                    <Link href={`/edit-test/${test.id}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </TableCell>
             </TableRow>
           ))}

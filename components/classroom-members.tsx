@@ -204,7 +204,7 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
         <CardHeader className="flex flex-row items-start justify-between">
           <div>
             <CardTitle>Classroom Members</CardTitle>
-            <CardDescription>Manage students and teachers in this classroom</CardDescription>
+            <CardDescription>Manage students in this classroom</CardDescription>
           </div>
           {isOwner && (
               <div className="flex space-x-2">
