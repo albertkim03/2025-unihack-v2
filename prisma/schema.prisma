@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String            @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String            @unique
+  password    String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  classrooms  Classroom[]       @relation("ClassroomOwner")
+  memberships ClassroomMember[]
+  tests       Test[]            @relation("TestCreator")
+  testResults TestResult[]
+}
+
+model Classroom {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  subject     String
+  gradeLevel  String
+  joinCode    String            @unique
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  owner       User              @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  members     ClassroomMember[]
+  tests       Test[]
+}
+
+model ClassroomMember {
+  id          String    @id @default(cuid())
+  role        String    @default("student") // student, teaching-assistant, co-teacher
+  joinedAt    DateTime  @default(now())
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  classroomId String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  @@unique([classroomId, userId])
+}
+
+model Test {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  subject     String
+  timeLimit   Int // in minutes
+  dueDate     DateTime?
+  status      String       @default("draft") // draft, active, completed, archived
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  creator     User         @relation("TestCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   String
+  classroom   Classroom?   @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  classroomId String?
+  questions   Question[]
+  results     TestResult[]
+}
+
+model Question {
+  id      String   @id @default(cuid())
+  text    String
+  type    String // multiple-choice, true-false, short-answer
+  options Json? // for multiple choice questions
+  answer  String // correct answer
+  points  Int      @default(1)
+  test    Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testId  String
+  answers Answer[]
+}
+
+model TestResult {
+  id          String    @id @default(cuid())
+  score       Float
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  timeSpent   Int? // in seconds
+  test        Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  answers     Answer[]
+
+  @@unique([testId, userId])
+}
+
+model Answer {
+  id           String     @id @default(cuid())
+  text         String
+  isCorrect    Boolean
+  score        Float
+  testResult   TestResult @relation(fields: [testResultId], references: [id], onDelete: Cascade)
+  testResultId String
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId   String
+
+  @@unique([testResultId, questionId])
+}
