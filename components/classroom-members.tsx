@@ -97,11 +97,13 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
         throw new Error(errorData.error || "Failed to invite member")
       }
 
+      console.log(response)
       const newMember = await response.json()
       setMembers([...members, newMember])
       setInviteEmail("")
       setIsInviteDialogOpen(false)
 
+      console.log("hit")
       toast({
         title: "Success",
         description: "Invitation sent successfully",
