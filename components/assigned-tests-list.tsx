@@ -122,7 +122,7 @@ export function AssignedTestsList({ viewType, searchQuery, selectedSubject }: As
               </div>
             </CardContent>
             <CardFooter>
-              <Button asChild className="w-full">
+              <Button asChild className="default">
                 <Link href={test.status === "Completed" ? `/test-results/${test.id}` : `/take-test/${test.id}`}>
                   {test.status === "Completed" ? "View Results" : "Take Test"}
                 </Link>
@@ -170,7 +170,7 @@ export function AssignedTestsList({ viewType, searchQuery, selectedSubject }: As
               </TableCell>
               <TableCell>{test.score || "-"}</TableCell>
               <TableCell className="text-right">
-                <Button asChild variant="ghost">
+                <Button asChild variant="default">
                   <Link href={test.status === "Completed" ? `/test-results/${test.id}` : `/take-test/${test.id}`}>
                     {test.status === "Completed" ? "View Results" : "Take Test"}
                   </Link>

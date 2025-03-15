@@ -3,15 +3,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Share, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { Eye, Share, MoreHorizontal, Edit, Trash2, Copy, FileText } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Copy } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PersonalTestsListProps {
   viewType: string;
@@ -27,6 +32,7 @@ interface TestItem {
   questions: number;
   status: string;
   shared: boolean;
+  score: string;
 }
 
 export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: PersonalTestsListProps) {
@@ -40,7 +46,7 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
         const queryParams = new URLSearchParams({
           type: 'created',
           search: searchQuery,
-          subject: selectedSubject
+          subject: selectedSubject,
         });
         const res = await fetch(`/api/tests?${queryParams}`);
         if (!res.ok) {
@@ -57,6 +63,10 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
           questions: test._count?.questions ?? 0,
           status: test.status || "Draft",
           shared: test.shared ?? false,
+          score:
+            test.results && test.results.length > 0
+              ? `${test.results[0].score}%`
+              : "-", // Display a dash if no score available
         }));
 
         setTests(formattedTests);
@@ -83,6 +93,7 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
                 <CardTitle className="text-lg">{test.name}</CardTitle>
                 <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
               </div>
+              <CardDescription>{test.createdAt}</CardDescription>
             </CardHeader>
             <CardContent className="pb-2">
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -91,12 +102,12 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
                   <p className="font-medium">{test.subject}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Created</p>
-                  <p className="font-medium">{test.createdAt}</p>
-                </div>
-                <div>
                   <p className="text-muted-foreground">Questions</p>
                   <p className="font-medium">{test.questions}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Score</p>
+                  <p className="font-medium">{test.score}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Shared</p>
@@ -106,6 +117,9 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
             </CardContent>
             <CardFooter>
               <div className="flex w-full items-center gap-2">
+                <Button asChild className="flex-1">
+                  <Link href={`/take-test/${test.id}`}>Take Test</Link>
+                </Button>
                 <Button asChild className="flex-1">
                   <Link href={`/test-details/${test.id}`}>View Details</Link>
                 </Button>
@@ -151,6 +165,7 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
             <TableHead>Created</TableHead>
             <TableHead>Questions</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Score</TableHead>
             <TableHead>Shared</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -165,9 +180,13 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
               <TableCell>
                 <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
               </TableCell>
+              <TableCell>{test.score}</TableCell>
               <TableCell>{test.shared ? "Yes" : "No"}</TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">
+                  <Button asChild variant="default" size="sm">
+                    <Link href={`/take-test/${test.id}`}>Take Test</Link>
+                  </Button>
                   <Button asChild variant="ghost" size="icon">
                     <Link href={`/test-details/${test.id}`}>
                       <Eye className="h-4 w-4" />
