@@ -1,67 +1,71 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, Share, MoreHorizontal, Edit, Trash2 } from "lucide-react"
-import Link from "next/link"
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, Share, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
 
 interface PersonalTestsListProps {
-  viewType: string
+  viewType: string;
 }
 
+type TestItem = {
+  id: string;
+  name: string;
+  subject: string;
+  createdAt: string;
+  questions: number;
+  status: string;
+  shared: boolean;
+};
+
 export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
-  const personalTests = [
-    {
-      id: "TEST-1001",
-      name: "Physics: Wave Properties",
-      subject: "Physics",
-      created: "Mar 14, 2025",
-      questions: 15,
-      status: "Draft",
-      shared: false,
-    },
-    {
-      id: "TEST-1002",
-      name: "Chemistry: Organic Compounds",
-      subject: "Chemistry",
-      created: "Mar 10, 2025",
-      questions: 20,
-      status: "Published",
-      shared: true,
-    },
-    {
-      id: "TEST-1003",
-      name: "Biology: Genetics Basics",
-      subject: "Biology",
-      created: "Mar 8, 2025",
-      questions: 12,
-      status: "Published",
-      shared: false,
-    },
-    {
-      id: "TEST-1004",
-      name: "Mathematics: Differential Equations",
-      subject: "Mathematics",
-      created: "Mar 5, 2025",
-      questions: 10,
-      status: "Published",
-      shared: true,
-    },
-    {
-      id: "TEST-1005",
-      name: "Computer Science: Data Structures",
-      subject: "Computer Science",
-      created: "Mar 1, 2025",
-      questions: 18,
-      status: "Draft",
-      shared: false,
-    },
-  ]
+  const [tests, setTests] = useState<TestItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchTests() {
+      try {
+        const res = await fetch(`/api/tests?type=created`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch tests");
+        }
+        const data = await res.json();
+        console.log("Fetched tests:", data);
+
+        const formattedTests = data.map((test: any) => ({
+          id: test.id,
+          name: test.name || "Untitled Test",
+          subject: test.subject || "No Subject",
+          createdAt: test.createdAt ? format(new Date(test.createdAt), "MMM dd, yyyy") : "Unknown",
+          questions: test._count?.questions ?? 0,
+          status: test.status || "Draft",
+          shared: test.shared ?? false,
+        }));
+
+        setTests(formattedTests);
+      } catch (err) {
+        console.error("Error fetching tests:", err);
+        setError("Failed to load tests.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTests();
+  }, []);
+
+  if (loading) return <p>Loading tests...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   if (viewType === "grid") {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {personalTests.map((test) => (
+        {tests.map((test) => (
           <Card key={test.id}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
@@ -77,7 +81,7 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Created</p>
-                  <p className="font-medium">{test.created}</p>
+                  <p className="font-medium">{test.createdAt}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Questions</p>
@@ -112,7 +116,7 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -130,11 +134,11 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {personalTests.map((test) => (
+          {tests.map((test) => (
             <TableRow key={test.id}>
               <TableCell className="font-medium">{test.name}</TableCell>
               <TableCell>{test.subject}</TableCell>
-              <TableCell>{test.created}</TableCell>
+              <TableCell>{test.createdAt}</TableCell>
               <TableCell>{test.questions}</TableCell>
               <TableCell>
                 <Badge variant={test.status === "Published" ? "default" : "outline"}>{test.status}</Badge>
@@ -165,6 +169,5 @@ export function PersonalTestsList({ viewType }: PersonalTestsListProps) {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
-

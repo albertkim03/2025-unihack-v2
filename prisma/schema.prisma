@@ -104,4 +104,4 @@ model Answer {
   questionId   String
 
   @@unique([testResultId, questionId])
-}
+} 
