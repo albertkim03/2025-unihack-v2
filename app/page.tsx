@@ -9,7 +9,16 @@ export default function Home() {
     <div className="container mx-auto px-4 pt-20 pb-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="flex flex-col items-center md:items-start text-center md:text-left space-y-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">AI-Powered STEM Test Generator</h1>
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl flex items-center gap-8">
+            <Image
+              src="/images/QuizzieLogoIcon.png"
+              alt="Quizzie Logo"
+              width={85}
+              height={85}
+              className="inline-block"
+            />
+            AI-Powered STEM Test Generator
+          </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground">
             Create customised test papers for STEM subjects using AI. Upload source materials, select topics, and generate
             tests in minutes.
