@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
-import { AtSign, Lock, ArrowRight, Github, ChromeIcon as Google } from "lucide-react"
+import { AtSign, Lock, ArrowRight } from "lucide-react"
 import { login, signup, type FormState } from "@/app/actions/auth"
 import { useFormState } from "react-dom"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -88,7 +88,7 @@ export default function LoginPage() {
   }
 
   return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex min-h-[calc(100vh-8rem)]  items-center justify-center">
         <Card className="w-full max-w-md">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -155,24 +155,6 @@ export default function LoginPage() {
                     {isSubmitting ? "Logging in..." : "Login"}
                     {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <span className="relative bg-card px-2 text-xs uppercase text-muted-foreground">
-                    Or continue with
-                  </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" type="button">
-                      <Google className="mr-2 h-4 w-4" />
-                      Google
-                    </Button>
-                    <Button variant="outline" type="button">
-                      <Github className="mr-2 h-4 w-4" />
-                      GitHub
-                    </Button>
-                  </div>
                 </CardFooter>
               </form>
             </TabsContent>
@@ -238,43 +220,12 @@ export default function LoginPage() {
                       character.
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="terms" name="terms" required />
-                    <Label htmlFor="terms" className="text-sm">
-                      I agree to the{" "}
-                      <Link href="/terms" className="text-primary hover:underline">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="/privacy" className="text-primary hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </Label>
-                  </div>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? "Creating account..." : "Create Account"}
                     {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <span className="relative bg-card px-2 text-xs uppercase text-muted-foreground">
-                    Or continue with
-                  </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" type="button">
-                      <Google className="mr-2 h-4 w-4" />
-                      Google
-                    </Button>
-                    <Button variant="outline" type="button">
-                      <Github className="mr-2 h-4 w-4" />
-                      GitHub
-                    </Button>
-                  </div>
                 </CardFooter>
               </form>
             </TabsContent>
