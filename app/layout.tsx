@@ -38,19 +38,8 @@ export default function RootLayout({
               <footer className="border-t py-6 w-full">
                 <div className="max-w-screen-xl w-full mx-auto flex flex-row items-center justify-between px-4">
                   <p className="text-sm text-muted-foreground flex-grow">
-                    &copy; {new Date().getFullYear()} STEM Test Generator. All rights reserved.
+                    &copy; {new Date().getFullYear()} Boost123. All rights reserved.
                   </p>
-                  <nav className="flex gap-4">
-                    <a href="/terms" className="text-sm text-muted-foreground hover:underline">
-                      Terms
-                    </a>
-                    <a href="/privacy" className="text-sm text-muted-foreground hover:underline">
-                      Privacy
-                    </a>
-                    <a href="/contact" className="text-sm text-muted-foreground hover:underline">
-                      Contact
-                    </a>
-                  </nav>
                 </div>
               </footer>
             </div>

@@ -415,7 +415,7 @@ export default function TestDetailsPage({ params }) {
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarImage src={student.avatar} alt={student.name} />
-                            <AvatarFallback>
+                            <AvatarFallback className={`bg-[#${student.iconColor}]`} style={{ backgroundColor: `#${student.iconColor}` }}>
                               {student.name
                                 .split(" ")
                                 .map((n) => n[0])

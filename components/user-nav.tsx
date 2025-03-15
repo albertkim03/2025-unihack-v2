@@ -63,17 +63,17 @@ export function UserNav() {
         </Button>
     )
   }
-
+  
   return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <Avatar className="h-8 w-8">
+          <Button variant="ghost" className="relative h-11 w-11 rounded-full">
+            <Avatar className="h-11 w-11">
               <AvatarImage
                   src={session.user.image || "/placeholder.svg?height=32&width=32"}
                   alt={session.user.name || "User"}
               />
-              <AvatarFallback>
+              <AvatarFallback className={`bg-[#${session.user.iconColor}]`} style={{ backgroundColor: `#${session.user.iconColor}` }}>
                 {session.user.firstName?.[0]}
                 {session.user.lastName?.[0]}
               </AvatarFallback>

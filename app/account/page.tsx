@@ -22,7 +22,7 @@ const initialState: ProfileFormState = {}
 
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession()
-  const [profileState, profileAction] = useState(updateProfile, initialState)
+  const [profileState, profileAction] = useFormState(updateProfile, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -84,7 +84,7 @@ export default function AccountPage() {
                             src={session?.user?.image || "/placeholder.svg?height=80&width=80"}
                             alt={session?.user?.name || "User"}
                         />
-                        <AvatarFallback>
+                        <AvatarFallback className={`bg-[#${session.user.iconColor}]`} style={{ backgroundColor: `#${session.user.iconColor}` }}>
                           {session?.user?.firstName?.[0]}
                           {session?.user?.lastName?.[0]}
                         </AvatarFallback>
