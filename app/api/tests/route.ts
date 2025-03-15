@@ -17,6 +17,20 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url)
         const type = searchParams.get("type") || "created" // created, assigned
         const status = searchParams.get("status") // draft, active, completed, archived
+        const search = searchParams.get("search") || ""
+        const subject = searchParams.get("subject") || "all"
+
+        // Build the where clause for search and subject filtering
+        const searchFilter = search ? {
+            name: { contains: search, mode: 'insensitive' }
+        } : {}
+
+        const subjectFilter = subject !== "all" ? {
+            subject: {
+                equals: subject,
+                mode: 'insensitive'
+            }
+        } : {}
 
         if (type === "created") {
             // Get tests created by the user
@@ -24,6 +38,8 @@ export async function GET(request: Request) {
                 where: {
                     creatorId: session.user.id,
                     ...(status ? { status } : {}),
+                    ...searchFilter,
+                    ...subjectFilter
                 },
                 include: {
                     classroom: {
@@ -64,6 +80,8 @@ export async function GET(request: Request) {
                         in: classroomIds,
                     },
                     ...(status ? { status } : {}),
+                    ...searchFilter,
+                    ...subjectFilter
                 },
                 include: {
                     classroom: {

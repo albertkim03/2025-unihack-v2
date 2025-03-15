@@ -48,11 +48,6 @@ export function ClassroomSelector({ value, onChange }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="classroom">Select Classroom</Label>
-          <Button variant="ghost" size="sm" asChild className="h-8">
-            <Link href="/classrooms/create">
-              <Plus className="mr-1 h-3 w-3" /> New
-            </Link>
-          </Button>
         </div>
         <Select value={value} onValueChange={onChange} disabled={isLoading}>
           <SelectTrigger id="classroom">

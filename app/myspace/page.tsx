@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,6 +14,33 @@ import { AssignedTestsList } from "@/components/assigned-tests-list"
 
 export default function MySpacePage() {
   const [viewType, setViewType] = useState("list")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedSubject, setSelectedSubject] = useState("all")
+  const [summaryData, setSummaryData] = useState({
+    createdTests: 0,
+    assignedTests: 0,
+    completionRate: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchSummaryData() {
+      try {
+        const res = await fetch('/api/myspace/summary')
+        if (!res.ok) {
+          throw new Error('Failed to fetch summary data')
+        }
+        const data = await res.json()
+        setSummaryData(data)
+      } catch (error) {
+        console.error('Error fetching summary data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSummaryData()
+  }, [])
 
   return (
       <div className="container mx-auto px-4 py-8">
@@ -29,7 +56,7 @@ export default function MySpacePage() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">14</div>
+              <div className="text-2xl font-bold">{loading ? "..." : summaryData.createdTests}</div>
               <p className="text-xs text-muted-foreground">Tests created by you</p>
             </CardContent>
           </Card>
@@ -39,7 +66,7 @@ export default function MySpacePage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold">{loading ? "..." : summaryData.assignedTests}</div>
               <p className="text-xs text-muted-foreground">Tests assigned to you</p>
             </CardContent>
           </Card>
@@ -49,7 +76,7 @@ export default function MySpacePage() {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">85%</div>
+              <div className="text-2xl font-bold">{loading ? "..." : `${summaryData.completionRate}%`}</div>
               <p className="text-xs text-muted-foreground">Of assigned tests completed</p>
             </CardContent>
           </Card>
@@ -65,9 +92,15 @@ export default function MySpacePage() {
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Search tests..." className="pl-8 w-full sm:w-[200px]" />
+                <Input 
+                  type="search" 
+                  placeholder="Search tests..." 
+                  className="pl-8 w-full sm:w-[200px]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              <Select defaultValue="all">
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                 <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Filter by subject" />
                 </SelectTrigger>
@@ -105,11 +138,11 @@ export default function MySpacePage() {
           </div>
 
           <TabsContent value="personal">
-            <PersonalTestsList viewType={viewType} />
+            <PersonalTestsList viewType={viewType} searchQuery={searchQuery} selectedSubject={selectedSubject} />
           </TabsContent>
 
           <TabsContent value="assigned">
-            <AssignedTestsList viewType={viewType} />
+            <AssignedTestsList viewType={viewType} searchQuery={searchQuery} selectedSubject={selectedSubject} />
           </TabsContent>
         </Tabs>
       </div>
