@@ -10,6 +10,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import Image from "next/image"
 
 export function MainNav() {
   const { data: session, status } = useSession()
@@ -27,9 +28,14 @@ export function MainNav() {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <Link href="/" legacyBehavior passHref>
+        <Link href="/" legacyBehavior passHref>
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              Home
+              <Image
+                src="/images/QuizzieLogo.png"
+                alt="Home"
+                width={100}
+                height={100}
+              />
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

@@ -96,10 +96,6 @@ export function RecentTests() {
                   <FileText className="h-4 w-4" />
                   <span className="sr-only">View results</span>
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
-                </Button>
               </TableCell>
             </TableRow>
           ))}

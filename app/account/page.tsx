@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { AccountStats } from "@/components/account-stats"
 import { useSession } from "next-auth/react"
 import { updateProfile, type ProfileFormState } from "@/app/actions/user"
 import { useFormState } from "react-dom"
@@ -23,7 +22,6 @@ const initialState: ProfileFormState = {}
 export default function AccountPage() {
   const { data: session, update: updateSession } = useSession()
   const [profileState, profileAction] = useFormState(updateProfile, initialState)
-  // const [profileState, profileAction] = useState(updateProfile, initialState)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -59,7 +57,6 @@ export default function AccountPage() {
         <Tabs defaultValue="profile" className="space-y-8">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="statistics">Statistics</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
@@ -90,7 +87,7 @@ export default function AccountPage() {
                           {session?.user?.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="space-y-2">
+                      <div className="flex flex-col gap-2">
                         <Button size="sm">Change Avatar</Button>
                         <Button size="sm" variant="outline">
                           Remove
@@ -136,10 +133,6 @@ export default function AccountPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="statistics">
-            <AccountStats />
-          </TabsContent>
-
           <TabsContent value="security">
             <Card>
               <CardHeader>
@@ -162,24 +155,6 @@ export default function AccountPage() {
                     <Input id="confirm-password" type="password" />
                   </div>
                   <Button>Update Password</Button>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Add an extra layer of security to your account by enabling two-factor authentication.
-                  </p>
-                  <Button variant="outline">Enable Two-Factor Authentication</Button>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Sessions</h3>
-                  <p className="text-sm text-muted-foreground">Manage your active sessions across devices.</p>
-                  <Button variant="outline">Manage Sessions</Button>
                 </div>
               </CardContent>
             </Card>
