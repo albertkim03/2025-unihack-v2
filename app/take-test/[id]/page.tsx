@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -15,8 +15,36 @@ export default function TakeTestPage({ params }) {
   const router = useRouter()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [timeRemaining, setTimeRemaining] = useState("45:00")
+  const [timeRemaining, setTimeRemaining] = useState(45 * 60) // 45 minutes in seconds
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Format time remaining into MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  // Timer effect
+  useEffect(() => {
+    // Don't start timer if already submitting
+    if (isSubmitting) return
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // Time's up - auto submit
+          clearInterval(timer)
+          handleSubmitTest()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    // Cleanup on unmount
+    return () => clearInterval(timer)
+  }, [isSubmitting])
 
   // Mock test data
   const test = {
@@ -111,9 +139,9 @@ export default function TakeTestPage({ params }) {
                   </CardTitle>
                   <CardDescription>Select the best answer</CardDescription>
                 </div>
-                <div className="flex items-center text-muted-foreground">
+                <div className={`flex items-center ${timeRemaining <= 300 ? 'text-red-500' : 'text-muted-foreground'}`}>
                   <Clock className="mr-2 h-4 w-4" />
-                  <span>{timeRemaining} remaining</span>
+                  <span>{formatTime(timeRemaining)} remaining</span>
                 </div>
               </div>
               <Progress value={progress} className="h-2" />
