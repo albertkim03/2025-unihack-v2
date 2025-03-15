@@ -1,273 +1,97 @@
 // @ts-nocheck
-"use client"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import prisma from "@/lib/prisma"
+import { redirect } from "next/navigation"
+import { TestTaker } from "@/components/test-taker"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
-import { Clock, ChevronLeft, ChevronRight, Save, CheckCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+export default async function TakeTestPage({ params }) {
+  const session = await getServerSession(authOptions)
 
-export default function TakeTestPage({ params }) {
-  const router = useRouter()
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [timeRemaining, setTimeRemaining] = useState(45 * 60) // 45 minutes in seconds
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Format time remaining into MM:SS
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+  if (!session) {
+    redirect("/login")
   }
 
-  // Timer effect
-  useEffect(() => {
-    // Don't start timer if already submitting
-    if (isSubmitting) return
+  const testId = params.id
+  const userId = session.user.id
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          // Time's up - auto submit
-          clearInterval(timer)
-          handleSubmitTest()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+  // Fetch the test with questions
+  const test = await prisma.test.findUnique({
+    where: { id: testId },
+    include: {
+      questions: true,
+      classroom: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
 
-    // Cleanup on unmount
-    return () => clearInterval(timer)
-  }, [isSubmitting])
-
-  // Mock test data
-  const test = {
-    id: params.id,
-    name: "Physics: Quantum Mechanics",
-    subject: "Physics",
-    assignedBy: "Prof. Richard Feynman",
-    totalQuestions: 10,
-    timeLimit: "45 minutes",
-    questions: [
-      {
-        id: 1,
-        text: "Which of the following is a fundamental principle of quantum mechanics?",
-        options: [
-          { id: "a", text: "Heisenberg's Uncertainty Principle" },
-          { id: "b", text: "Newton's Third Law" },
-          { id: "c", text: "Boyle's Law" },
-          { id: "d", text: "Ohm's Law" },
-        ],
-      },
-      {
-        id: 2,
-        text: "What is the mathematical description of the wave function in quantum mechanics?",
-        options: [
-          { id: "a", text: "Schrödinger equation" },
-          { id: "b", text: "Maxwell's equations" },
-          { id: "c", text: "Einstein's field equations" },
-          { id: "d", text: "Navier-Stokes equations" },
-        ],
-      },
-      {
-        id: 3,
-        text: "Which particle is described as having both wave-like and particle-like properties?",
-        options: [
-          { id: "a", text: "Electron" },
-          { id: "b", text: "Proton" },
-          { id: "c", text: "Neutron" },
-          { id: "d", text: "All of the above" },
-        ],
-      },
-      // More questions would be here
-    ],
-    timeLimit: "45 minutes",
+  if (!test) {
+    redirect("/myspace?error=test-not-found")
   }
 
-  // Calculate total questions from the actual questions array
-  const totalQuestions = test.questions.length
+  // Check if user has permission to take this test
+  const canTakeTest = await checkUserPermission(userId, test)
 
-  const handleAnswerChange = (value: string) => {
-    setAnswers({
-      ...answers,
-      [currentQuestion]: value,
+  if (!canTakeTest) {
+    redirect("/myspace?error=permission-denied")
+  }
+
+  // Check if user already has an attempt
+  const existingAttempt = await prisma.testResult.findUnique({
+    where: {
+      testId_userId: {
+        testId,
+        userId,
+      },
+    },
+    include: {
+      answers: {
+        include: {
+          question: true,
+        },
+      },
+    },
+  })
+
+  return <TestTaker test={test} existingAttempt={existingAttempt} userId={userId} />
+}
+
+async function checkUserPermission(userId: string, test: any) {
+  // If the user is the creator, they can take the test
+  if (test.creatorId === userId) {
+    return true
+  }
+
+  // If the test is assigned to a classroom, check if user is a member
+  if (test.classroomId) {
+    const membership = await prisma.classroomMember.findUnique({
+      where: {
+        classroomId_userId: {
+          classroomId: test.classroomId,
+          userId,
+        },
+      },
     })
+
+    return !!membership
   }
 
-  const goToNextQuestion = () => {
-    if (currentQuestion < totalQuestions - 1) {
-      setCurrentQuestion(currentQuestion + 1)
-    }
-  }
+  // If the test is directly assigned to the user
+  const isAssigned = await prisma.test.findFirst({
+    where: {
+      id: test.id,
+      assignedUsers: {
+        some: {
+          id: userId,
+        },
+      },
+    },
+  })
 
-  const goToPreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1)
-    }
-  }
-
-  const handleSubmitTest = () => {
-    setIsSubmitting(true)
-
-    // Simulate submission delay
-    setTimeout(() => {
-      router.push(`/test-results/${params.id}`)
-    }, 1500)
-  }
-
-  const currentQuestionData = test.questions[currentQuestion]
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100
-  const answeredQuestions = Object.keys(answers).length
-
-  // If no question data is available, show an error state
-  if (!currentQuestionData) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>Question data not available</CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    )
-  }
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{test.name}</h1>
-        <p className="text-muted-foreground">Assigned by {test.assignedBy}</p>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="lg:w-3/4">
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>
-                    Question {currentQuestion + 1} of {totalQuestions}
-                  </CardTitle>
-                  <CardDescription>Select the best answer</CardDescription>
-                </div>
-                <div className={`flex items-center ${timeRemaining <= 300 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                  <Clock className="mr-2 h-4 w-4" />
-                  <span>{formatTime(timeRemaining)} remaining</span>
-                </div>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="text-lg font-medium">{currentQuestionData.text}</div>
-
-                <RadioGroup
-                  value={answers[currentQuestion] || ""}
-                  onValueChange={handleAnswerChange}
-                  className="space-y-3"
-                >
-                  {currentQuestionData.options.map((option) => (
-                    <div
-                      key={option.id}
-                      className={`flex items-center space-x-2 rounded-md border p-4 transition-colors ${
-                        answers[currentQuestion] === option.id ? "border-primary bg-primary/5" : ""
-                      }`}
-                    >
-                      <RadioGroupItem value={option.id} id={`option-${option.id}`} />
-                      <Label htmlFor={`option-${option.id}`} className="flex-1 cursor-pointer">
-                        {option.text}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={goToPreviousQuestion} disabled={currentQuestion === 0}>
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Previous
-              </Button>
-
-              {currentQuestion < totalQuestions - 1 ? (
-                <Button onClick={goToNextQuestion}>
-                  Next
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button onClick={handleSubmitTest} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-                  {isSubmitting ? (
-                    <>Submitting...</>
-                  ) : (
-                    <>
-                      Submit Test
-                      <CheckCircle className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-
-        <div className="lg:w-1/4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Question Navigator</CardTitle>
-              <CardDescription>
-                {answeredQuestions} of {totalQuestions} questions answered
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: totalQuestions }).map((_, index) => (
-                  <Button
-                    key={index}
-                    variant={answers[index] ? "default" : "outline"}
-                    className={`h-10 w-10 p-0 ${currentQuestion === index ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => setCurrentQuestion(index)}
-                  >
-                    {index + 1}
-                  </Button>
-                ))}
-              </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="mr-2 h-3 w-3 rounded-full bg-primary"></div>
-                    <span>Answered</span>
-                  </div>
-                  <span>{answeredQuestions}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="mr-2 h-3 w-3 rounded-full border border-muted-foreground"></div>
-                    <span>Unanswered</span>
-                  </div>
-                  <span>{totalQuestions - answeredQuestions}</span>
-                </div>
-              </div>
-
-              <Separator className="my-4" />
-
-              <Button className="w-full" variant="outline" onClick={() => {}}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Progress
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
+  return !!isAssigned
 }
 
