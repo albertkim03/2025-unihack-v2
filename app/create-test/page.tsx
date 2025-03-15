@@ -173,7 +173,7 @@ export default function CreateTestPage() {
                   </div>
                 </RadioGroup>
 
-                {assignmentType === "classroom" && (
+                {assignmentType === "classroom.ts" && (
                   <div className="space-y-4 pt-4">
                     <ClassroomSelector />
 
@@ -215,7 +215,7 @@ export default function CreateTestPage() {
             <Button variant="outline" onClick={() => setCurrentStep("configure")}>
               Back
             </Button>
-            <Button>Generate & {assignmentType === "classroom" ? "Assign" : "Save"}</Button>
+            <Button>Generate & {assignmentType === "classroom.ts" ? "Assign" : "Save"}</Button>
           </div>
         </TabsContent>
       </Tabs>

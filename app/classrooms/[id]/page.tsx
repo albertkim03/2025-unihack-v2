@@ -17,7 +17,7 @@ export default function ClassroomPage({ params }) {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
 
-  // Mock classroom data
+  // Mock classroom.ts data
   const classroom = {
     id: params.id,
     name: "Physics 101",
@@ -40,7 +40,7 @@ export default function ClassroomPage({ params }) {
   // Simulate loading and permission check
   useEffect(() => {
     const checkPermission = async () => {
-      // In a real app, this would be an API call to check if the user owns this classroom
+      // In a real app, this would be an API call to check if the user owns this classroom.ts
       setTimeout(() => {
         setIsOwner(true) // Set to true for demo purposes
         setIsLoading(false)

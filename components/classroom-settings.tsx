@@ -32,7 +32,7 @@ export function ClassroomSettings({ classroomId }: ClassroomSettingsProps) {
   const router = useRouter()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
-  // Mock classroom data
+  // Mock classroom.ts data
   const classroom = {
     id: classroomId,
     name: "Physics 101",
@@ -55,8 +55,8 @@ export function ClassroomSettings({ classroomId }: ClassroomSettingsProps) {
   }
 
   const handleDeleteClassroom = () => {
-    // In a real app, this would delete the classroom
-    console.log("Deleting classroom:", classroomId)
+    // In a real app, this would delete the classroom.ts
+    console.log("Deleting classroom.ts:", classroomId)
     setShowDeleteDialog(false)
     router.push("/classrooms")
   }
