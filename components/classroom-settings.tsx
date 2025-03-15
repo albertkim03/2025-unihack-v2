@@ -175,7 +175,7 @@ export function ClassroomSettings({ classroomId }) {
                       <SelectItem value="University">University</SelectItem>
                     </SelectContent>
                   </Select>
-                  {state.errors?.gradeLevel && <p className="text-sm text-red-500">{state.errors.gradeLevel}</p>}
+                  {state.errors?.grade && <p className="text-sm text-red-500">{state.errors.grade}</p>}
                 </div>
               </div>
 
