@@ -415,7 +415,7 @@ export default function CreateTestPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline" onClick={() => router.push("/dashboard")}>Cancel</Button>
                 <Button onClick={handleContinue}>Continue</Button>
               </CardFooter>
             </Card>

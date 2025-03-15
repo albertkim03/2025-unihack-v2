@@ -9,6 +9,7 @@ import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getServerSession } from "next-auth"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -17,11 +18,13 @@ export const metadata: Metadata = {
   description: "AI-powered test paper generator for STEM subjects",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await getServerSession()
+
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -32,9 +35,11 @@ export default function RootLayout({
               <div className="max-w-screen-xl w-full mx-auto flex h-16 items-center px-4">
                 <MainNav />
                 <div className="ml-auto flex items-center gap-4">
-                  <Button asChild>
-                    <Link href="/create-test">Create Test</Link>
-                  </Button>
+                  {session && (
+                    <Button asChild>
+                      <Link href="/create-test">Create Test</Link>
+                    </Button>
+                  )}
                   <UserNav />
                 </div>
               </div>
