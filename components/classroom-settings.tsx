@@ -1,8 +1,7 @@
 // @ts-nocheck
-
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,7 +31,8 @@ export function ClassroomSettings({ classroomId }) {
   const updateClassroomWithId = updateClassroom.bind(null, classroomId)
   const [state, formAction] = useFormState(updateClassroomWithId, initialState)
 
-  useState(() => {
+  // Fix: Changed useState to useEffect for fetching classroom data
+  useEffect(() => {
     const fetchClassroom = async () => {
       try {
         const response = await fetch(`/api/classrooms/${classroomId}`)
@@ -52,6 +52,34 @@ export function ClassroomSettings({ classroomId }) {
 
     fetchClassroom()
   }, [classroomId])
+
+  // Add effect to refresh data after successful update
+  useEffect(() => {
+    if (state.success) {
+      // Refresh the classroom data after successful update
+      const refreshClassroom = async () => {
+        try {
+          const response = await fetch(`/api/classrooms/${classroomId}`)
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch updated classroom data")
+          }
+
+          const data = await response.json()
+          setClassroom(data)
+
+          toast({
+            title: "Success",
+            description: state.message,
+          })
+        } catch (error) {
+          console.error("Error refreshing classroom data:", error)
+        }
+      }
+
+      refreshClassroom()
+    }
+  }, [state.success, classroomId, toast, state.message])
 
   const handleCopyJoinCode = () => {
     if (classroom?.joinCode) {
@@ -137,16 +165,14 @@ export function ClassroomSettings({ classroomId }) {
 
                 <div className="space-y-2">
                   <Label htmlFor="grade-level">Grade Level</Label>
-                  <Select name="grade-level" defaultValue={classroom.gradeLevel}>
+                  <Select name="grade-level" defaultValue={classroom.grade}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select grade level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Elementary">Elementary</SelectItem>
-                      <SelectItem value="Middle School">Middle School</SelectItem>
+                      <SelectItem value="Primary School">Primary School</SelectItem>
                       <SelectItem value="High School">High School</SelectItem>
-                      <SelectItem value="College">College</SelectItem>
-                      <SelectItem value="Graduate">Graduate</SelectItem>
+                      <SelectItem value="University">University</SelectItem>
                     </SelectContent>
                   </Select>
                   {state.errors?.gradeLevel && <p className="text-sm text-red-500">{state.errors.gradeLevel}</p>}
@@ -164,10 +190,10 @@ export function ClassroomSettings({ classroomId }) {
                 <p className="text-xs text-muted-foreground">Share this code with students to join your classroom</p>
               </div>
 
-              {state.message && (
-                  <Alert variant={state.success ? "default" : "destructive"}>
+              {state.message && !state.success && (
+                  <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>{state.success ? "Success" : "Error"}</AlertTitle>
+                    <AlertTitle>Error</AlertTitle>
                     <AlertDescription>{state.message}</AlertDescription>
                   </Alert>
               )}

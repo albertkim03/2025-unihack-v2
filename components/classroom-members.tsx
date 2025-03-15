@@ -103,7 +103,6 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
       setInviteEmail("")
       setIsInviteDialogOpen(false)
 
-      console.log("hit")
       toast({
         title: "Success",
         description: "Invitation sent successfully",
