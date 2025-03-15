@@ -9,17 +9,18 @@ datasource db {
 }
 
 model User {
-  id          String            @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String            @unique
-  password    String
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  classrooms  Classroom[]       @relation("ClassroomOwner")
-  memberships ClassroomMember[]
-  tests       Test[]            @relation("TestCreator")
-  testResults TestResult[]
+  id            String            @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String            @unique
+  password      String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  classrooms    Classroom[]       @relation("ClassroomOwner")
+  memberships   ClassroomMember[]
+  tests         Test[]            @relation("TestCreator")
+  testResults   TestResult[]
+  assignedTests Test[]            @relation("TestAssignments")
 }
 
 model Classroom {
@@ -50,28 +51,26 @@ model ClassroomMember {
 }
 
 model Test {
-  id          String       @id @default(cuid())
-  name        String
-  description String?
-  subject     String
-  timeLimit   Int? // in minutes
-  dueDate     DateTime?
-  status      String?      @default("draft") // draft, active, completed, archived
-  createdAt   DateTime?    @default(now())
-  updatedAt   DateTime?    @updatedAt
-  creator     User         @relation("TestCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId   String
-  classroom   Classroom?   @relation(fields: [classroomId], references: [id], onDelete: SetNull)
-  classroomId String?
-  questions   Question[]
-  results     TestResult[]
+  id            String       @id @default(cuid())
+  name          String
+  subject       String
+  timeLimit     Int
+  createdAt     DateTime?    @default(now())
+  updatedAt     DateTime?    @updatedAt
+  creator       User         @relation("TestCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId     String
+  classroom     Classroom?   @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  classroomId   String?
+  questions     Question[]
+  results       TestResult[]
+  assignedUsers User[]       @relation("TestAssignments")
 }
 
 model Question {
   id      String   @id @default(cuid())
   text    String
   type    String // multiple-choice, true-false, short-answer
-  options Json? // for multiple choice questions
+  options String[] // for multiple choice questions
   answer  String // correct answer
   points  Int      @default(1)
   test    Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
