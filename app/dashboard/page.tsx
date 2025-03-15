@@ -1,53 +1,103 @@
 // @ts-nocheck
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { RecentTests } from "@/components/recent-tests"
-import { ClassroomOverview } from "@/components/classroom-overview"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import prisma from "@/lib/prisma"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { RecentTests } from "@/components/recent-tests";
+import { ClassroomOverview } from "@/components/classroom-overview";
+import { fetchUserSession } from "./actions";
+import { isSameMonth } from "date-fns"; // ✅ Import date-fns to check if results are from this month
 
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+export default function DashboardPage() {
+  const [session, setSession] = useState(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [totalTests, setTotalTests] = useState<number | string>("-");
+  const [completedTests, setCompletedTests] = useState<number | string>("-");
+  const [averageScore, setAverageScore] = useState<number | string>("-");
+  const [averageScoreThisMonth, setAverageScoreThisMonth] = useState<number | string>("-"); // ✅ NEW STATE
+  const [highestScore, setHighestScore] = useState<number | string>("-");
+  const [lowestScore, setLowestScore] = useState<number | string>("-");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get classrooms where the user is the owner
-  const ownedClassrooms = session?.user?.id ? await prisma.classroom.findMany({
-    where: {
-      ownerId: session.user.id,
-    },
-    include: {
-      _count: {
-        select: {
-          members: true,
-          tests: true,
-        },
-      },
-      tests: {
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 1,
-      },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  }) : []
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const sessionData = await fetchUserSession();
+        if (sessionData) {
+          setSession(sessionData);
+          setUserId(sessionData.user.id);
+        }
 
-  // Format classrooms for display
-  const formattedClassrooms = ownedClassrooms.map((classroom) => ({
-    id: classroom.id,
-    name: classroom.name,
-    description: classroom.description || "Your classroom",
-    subject: classroom.subject,
-    students: classroom._count.members,
-    tests: classroom._count.tests,
-    recent: classroom.tests[0]?.title || undefined,
-  }))
+        if (!sessionData?.user?.id) {
+          throw new Error("User session not found.");
+        }
+
+        // Fetch test data
+        const [createdRes, assignedRes] = await Promise.all([
+          fetch(`/api/tests?type=created`),
+          fetch(`/api/tests?type=assigned`),
+        ]);
+
+        if (!createdRes.ok || !assignedRes.ok) {
+          throw new Error("Failed to fetch test data");
+        }
+
+        const [createdData, assignedData] = await Promise.all([
+          createdRes.json(),
+          assignedRes.json(),
+        ]);
+
+        const allTests = [...createdData, ...assignedData];
+        setTotalTests(allTests.length || "-");
+
+        // Fetch completion status for each test
+        const testResults = await Promise.all(
+          allTests.map(async (test) => {
+            const resultRes = await fetch(`/api/tests/${test.id}/results/${sessionData.user.id}`);
+            if (!resultRes.ok) {
+              return { ...test, completed: false, score: null, completedAt: null };
+            }
+            const resultData = await resultRes.json();
+            return { ...test, completed: true, score: resultData.score, completedAt: resultData.completedAt };
+          })
+        );
+
+        // Calculate stats
+        const completedTestsData = testResults.filter((test) => test.completed);
+        setCompletedTests(completedTestsData.length || "-");
+
+        const scores = completedTestsData.map((test) => test.score).filter((score) => score !== null);
+        setAverageScore(scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : "-");
+        setHighestScore(scores.length > 0 ? Math.round(Math.max(...scores)) : "-");
+        setLowestScore(scores.length > 0 ? Math.round(Math.min(...scores)) : "-");
+
+        // ✅ Calculate average score **for this month only**
+        const currentMonthScores = completedTestsData
+          .filter((test) => test.completedAt && isSameMonth(new Date(test.completedAt), new Date()))
+          .map((test) => test.score);
+
+        setAverageScoreThisMonth(
+          currentMonthScores.length > 0
+            ? Math.round(currentMonthScores.reduce((a, b) => a + b, 0) / currentMonthScores.length)
+            : "-"
+        );
+
+      } catch (err) {
+        console.error("Error fetching test stats:", err);
+        setError("Failed to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  if (loading) return <p>Loading dashboard...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -55,6 +105,7 @@ export default async function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
       </div>
 
+      {/* Stats Summary Cards */}
       <div className="mt-8 grid gap-6 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -62,7 +113,7 @@ export default async function DashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{totalTests}</div>
             <p className="text-xs text-muted-foreground">Tests awaiting completion</p>
           </CardContent>
         </Card>
@@ -72,64 +123,53 @@ export default async function DashboardPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{completedTests}</div>
             <p className="text-xs text-muted-foreground">Tests completed this month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <CardTitle className="text-sm font-medium">Average Score This Month</CardTitle> 
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">-</div>
+            <div className="text-2xl font-bold">
+              {averageScoreThisMonth !== "-" ? `${averageScoreThisMonth}%` : "-"}
+            </div>
             <p className="text-xs text-muted-foreground">Across all subjects</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Results Summary */}
       <div>
-      <Card className="mb-8">
-        <CardHeader className="pb-2">
-          <CardTitle>Results Summary</CardTitle>
-          <CardDescription>Overview of all test results</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="flex flex-col space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Total Tests</span>
-              <span className="text-3xl font-bold">48</span>
+        <Card className="mb-8">
+          <CardHeader className="pb-2">
+            <CardTitle>My Results Summary</CardTitle>
+            <CardDescription>Overview of all test results</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-col space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">Total Tests</span>
+                <span className="text-3xl font-bold">{totalTests}</span>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">Overall Average Score</span>
+                <span className="text-3xl font-bold">{averageScore !== "-" ? `${averageScore}%` : "-"}</span>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">Highest Score</span>
+                <span className="text-3xl font-bold">{highestScore !== "-" ? `${highestScore}%` : "-"}</span>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">Lowest Score</span>
+                <span className="text-3xl font-bold">{lowestScore !== "-" ? `${lowestScore}%` : "-"}</span>
+              </div>
             </div>
-            <div className="flex flex-col space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Average Score</span>
-              <span className="text-3xl font-bold">76%</span>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Highest Score</span>
-              <span className="text-3xl font-bold">98%</span>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Lowest Score</span>
-              <span className="text-3xl font-bold">42%</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
-
-      <Tabs defaultValue="recent" className="mt-8">
-        <TabsList>
-          <TabsTrigger value="recent">Recent Tests</TabsTrigger>
-          <TabsTrigger value="classrooms">My Classrooms</TabsTrigger>
-        </TabsList>
-        <TabsContent value="recent" className="mt-4">
-          <RecentTests />
-        </TabsContent>
-        <TabsContent value="classrooms" className="mt-4">
-          <ClassroomOverview classrooms={formattedClassrooms} />
-        </TabsContent>
-      </Tabs>
     </div>
-  )
+  );
 }
-
