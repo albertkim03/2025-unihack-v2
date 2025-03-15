@@ -64,13 +64,15 @@ export function RecentTests() {
               }
             }
 
+            const returnAnsweredQuestions = answeredQuestions != "-" ? `${Math.round(parseInt(answeredQuestions) * 100) / 100} %` : "- %"
+            
             return {
               id: test.id,
               name: test.name || "Untitled Test",
               subject: test.subject || "No Subject",
               createdAt: test.createdAt || new Date().toISOString(),
               status: test.results?.length > 0 ? "Completed" : "Assigned",
-              answeredQuestions: `${answeredQuestions}/${test._count?.questions ?? 0}`,
+              answeredQuestions: returnAnsweredQuestions,
               totalQuestions: test._count?.questions ?? 0,
             };
           })
