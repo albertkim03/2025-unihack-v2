@@ -88,7 +88,7 @@ export default function LoginPage() {
   }
 
   return (
-      <div className="container flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
