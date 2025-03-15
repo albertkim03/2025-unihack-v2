@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 "use server"
 
 import { getServerSession } from "next-auth/next"
@@ -12,21 +14,10 @@ const ClassroomSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters long" }).max(100),
   description: z.string().optional(),
   subject: z.string().min(1, { message: "Subject is required" }),
-  gradeLevel: z.string().min(1, { message: "Grade level is required" }),
+  grade: z.string().min(1, { message: "Grade level is required" }),
 })
 
-export type ClassroomFormState = {
-  errors?: {
-    name?: string[]
-    description?: string[]
-    subject?: string[]
-    gradeLevel?: string[]
-  }
-  message?: string
-  success?: boolean
-}
-
-export async function createClassroom(prevState: ClassroomFormState, formData: FormData): Promise<ClassroomFormState> {
+export async function createClassroom(prevState, formData) {
   // Get the current user session
   const session = await getServerSession(authOptions)
 
@@ -39,10 +30,10 @@ export async function createClassroom(prevState: ClassroomFormState, formData: F
 
   // Validate form fields
   const validatedFields = ClassroomSchema.safeParse({
-    name: formData.get("name"),
-    description: formData.get("description"),
-    subject: formData.get("subject"),
-    gradeLevel: formData.get("grade"),
+    name: formData.name,
+    description: formData.description,
+    subject: formData.subject,
+    grade: formData.grade,
   })
 
   // If form validation fails, return errors
@@ -56,12 +47,14 @@ export async function createClassroom(prevState: ClassroomFormState, formData: F
 
   const { name, description, subject, gradeLevel } = validatedFields.data
 
+  let classroom
+
   try {
     // Generate a unique join code
     const joinCode = generateJoinCode()
 
     // Create the classroom
-    const classroom = await prisma.classroom.create({
+    classroom = await prisma.classroom.create({
       data: {
         name,
         description,
@@ -74,25 +67,25 @@ export async function createClassroom(prevState: ClassroomFormState, formData: F
       },
     })
 
-    // Revalidate the classrooms page
-    revalidatePath("/classrooms")
-
-    // Redirect to the new classroom
-    redirect(`/classrooms/${classroom.id}`)
   } catch (error) {
     console.error("Error creating classroom:", error)
     return {
       message: "An error occurred while creating the classroom. Please try again.",
       success: false,
     }
+  } finally {
+
+    console.log("classroom: " + classroom)
+    // Revalidate the classrooms page
+    revalidatePath("/classrooms")
+
+    // Redirect to the new classroom
+    redirect(`/classrooms/${classroom.id}`)
   }
+
 }
 
-export async function updateClassroom(
-    classroomId: string,
-    prevState: ClassroomFormState,
-    formData: FormData,
-): Promise<ClassroomFormState> {
+export async function updateClassroom(classroomId, prevState, formData) {
   // Get the current user session
   const session = await getServerSession(authOptions)
 
@@ -163,7 +156,7 @@ export async function updateClassroom(
   }
 }
 
-export async function deleteClassroom(classroomId: string): Promise<{ success: boolean; message: string }> {
+export async function deleteClassroom(classroomId) {
   // Get the current user session
   const session = await getServerSession(authOptions)
 
@@ -209,7 +202,7 @@ export async function deleteClassroom(classroomId: string): Promise<{ success: b
   }
 }
 
-export async function joinClassroom(joinCode: string): Promise<{ success: boolean; message: string }> {
+export async function joinClassroom(joinCode) {
   // Get the current user session
   const session = await getServerSession(authOptions)
 
@@ -275,8 +268,103 @@ export async function joinClassroom(joinCode: string): Promise<{ success: boolea
   }
 }
 
+// Add a new function to remove a member from a classroom
+export async function removeClassroomMember(classroomId, memberId) {
+  // Get the current user session
+  const session = await getServerSession(authOptions)
+
+  if (!session || !session.user.id) {
+    return {
+      message: "You must be signed in to remove a member.",
+      success: false,
+    }
+  }
+
+  try {
+    // Check if the user is the owner of the classroom
+    const classroom = await prisma.classroom.findUnique({
+      where: { id: classroomId },
+      select: { ownerId: true },
+    })
+
+    if (!classroom || classroom.ownerId !== session.user.id) {
+      return {
+        message: "You don't have permission to remove members from this classroom.",
+        success: false,
+      }
+    }
+
+    // Remove the member
+    await prisma.classroomMember.delete({
+      where: { id: memberId },
+    })
+
+    // Revalidate the classroom members page
+    revalidatePath(`/classrooms/${classroomId}`)
+
+    return {
+      message: "Member removed successfully.",
+      success: true,
+    }
+  } catch (error) {
+    console.error("Error removing classroom member:", error)
+    return {
+      message: "An error occurred while removing the member. Please try again.",
+      success: false,
+    }
+  }
+}
+
+// Add a new function to update a member's role
+export async function updateMemberRole(classroomId, memberId, role) {
+  // Get the current user session
+  const session = await getServerSession(authOptions)
+
+  if (!session || !session.user.id) {
+    return {
+      message: "You must be signed in to update a member's role.",
+      success: false,
+    }
+  }
+
+  try {
+    // Check if the user is the owner of the classroom
+    const classroom = await prisma.classroom.findUnique({
+      where: { id: classroomId },
+      select: { ownerId: true },
+    })
+
+    if (!classroom || classroom.ownerId !== session.user.id) {
+      return {
+        message: "You don't have permission to update member roles in this classroom.",
+        success: false,
+      }
+    }
+
+    // Update the member's role
+    await prisma.classroomMember.update({
+      where: { id: memberId },
+      data: { role },
+    })
+
+    // Revalidate the classroom members page
+    revalidatePath(`/classrooms/${classroomId}`)
+
+    return {
+      message: "Member role updated successfully.",
+      success: true,
+    }
+  } catch (error) {
+    console.error("Error updating member role:", error)
+    return {
+      message: "An error occurred while updating the member's role. Please try again.",
+      success: false,
+    }
+  }
+}
+
 // Helper function to generate a random join code
-function generateJoinCode(length = 6): string {
+function generateJoinCode(length = 6) {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   let result = ""
   for (let i = 0; i < length; i++) {

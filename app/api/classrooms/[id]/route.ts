@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
-export async function GET(request: Request, { params }) {
+export async function GET(request, { params }) {
     try {
         const session = await getServerSession(authOptions)
 
@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }) {
 
         const classroomId = params.id
 
-        // Get the classroom with owner and member count
+        // Get the classroom details
         const classroom = await prisma.classroom.findUnique({
             where: {
                 id: classroomId,
@@ -59,9 +59,42 @@ export async function GET(request: Request, { params }) {
             }
         }
 
+        // Get statistics for the classroom
+        const testResults = await prisma.testResult.findMany({
+            where: {
+                test: {
+                    classroomId,
+                },
+            },
+            select: {
+                score: true,
+            },
+        })
+
+        const averageScore =
+            testResults.length > 0 ? testResults.reduce((sum, result) => sum + result.score, 0) / testResults.length : 0
+
+        // Get recent activity
+        const recentTests = await prisma.test.findMany({
+            where: {
+                classroomId,
+            },
+            orderBy: {
+                updatedAt: "desc",
+            },
+            take: 5,
+            select: {
+                id: true,
+                name: true,
+                updatedAt: true,
+            },
+        })
+
         return NextResponse.json({
             ...classroom,
             isOwner,
+            averageScore,
+            recentTests,
         })
     } catch (error) {
         console.error("Error fetching classroom:", error)

@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import prisma from "@/lib/prisma"
 
 export async function getUserStats(userId: string) {

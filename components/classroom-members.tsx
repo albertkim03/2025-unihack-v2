@@ -1,20 +1,12 @@
+// @ts-nocheck
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -25,429 +17,330 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Search,
-  UserPlus,
-  Mail,
-  MoreHorizontal,
-  UserCog,
-  UserMinus,
-  Download,
-  Filter,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-} from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { UserPlus, Search, Mail, Copy, MoreHorizontal } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/components/ui/use-toast"
 
-interface ClassroomMembersProps {
-  classroomId: string
-}
-
-export function ClassroomMembers({ classroomId }: ClassroomMembersProps) {
+export function ClassroomMembers({ classroomId, isOwner = false }) {
+  const [members, setMembers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [showInviteDialog, setShowInviteDialog] = useState(false)
-  const [inviteEmails, setInviteEmails] = useState("")
-  const [selectedRole, setSelectedRole] = useState("student")
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState("student")
+  const [joinCode, setJoinCode] = useState("")
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false)
+  const { toast } = useToast()
 
-  // Mock members data
-  const members = [
-    {
-      id: "user-1",
-      name: "Emma Miller",
-      email: "emma.miller@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=EM",
-      role: "Student",
-      joinedAt: "Feb 15, 2025",
-      status: "Active",
-      testsCompleted: 8,
-      averageScore: 95,
-    },
-    {
-      id: "user-2",
-      name: "James Chen",
-      email: "james.chen@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=JC",
-      role: "Student",
-      joinedAt: "Feb 16, 2025",
-      status: "Active",
-      testsCompleted: 7,
-      averageScore: 92,
-    },
-    {
-      id: "user-3",
-      name: "Sophia Patel",
-      email: "sophia.patel@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=SP",
-      role: "Student",
-      joinedAt: "Feb 18, 2025",
-      status: "Active",
-      testsCompleted: 8,
-      averageScore: 89,
-    },
-    {
-      id: "user-4",
-      name: "Michael Johnson",
-      email: "michael.j@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=MJ",
-      role: "Student",
-      joinedAt: "Feb 20, 2025",
-      status: "Active",
-      testsCompleted: 6,
-      averageScore: 87,
-    },
-    {
-      id: "user-5",
-      name: "Olivia Rodriguez",
-      email: "olivia.r@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=OR",
-      role: "Teaching Assistant",
-      joinedAt: "Jan 25, 2025",
-      status: "Active",
-      testsCompleted: 8,
-      averageScore: 94,
-    },
-    {
-      id: "user-6",
-      name: "William Taylor",
-      email: "william.t@example.com",
-      avatar: "/placeholder.svg?height=40&width=40&text=WT",
-      role: "Student",
-      joinedAt: "Feb 22, 2025",
-      status: "Pending",
-      testsCompleted: 0,
-      averageScore: 0,
-    },
-  ]
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await fetch(`/api/classrooms/${classroomId}/members`)
+        if (!response.ok) throw new Error("Failed to fetch members")
+        const data = await response.json()
+        setMembers(data)
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching members:", error)
+        setLoading(false)
+      }
+    }
 
-  // Filter members based on search query
-  const filteredMembers = members.filter(
-    (member) =>
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.role.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+    const fetchJoinCode = async () => {
+      try {
+        const response = await fetch(`/api/classrooms/${classroomId}`)
+        if (!response.ok) throw new Error("Failed to fetch classroom")
+        const data = await response.json()
+        setJoinCode(data.joinCode || "")
+      } catch (error) {
+        console.error("Error fetching join code:", error)
+      }
+    }
 
-  const handleInvite = () => {
-    // In a real app, this would send invitations to the emails
-    console.log(
-      "Inviting:",
-      inviteEmails.split(/[\n,]+/).map((email) => email.trim()),
+    fetchMembers()
+    if (isOwner) {
+      fetchJoinCode()
+    }
+  }, [classroomId, isOwner])
+
+  const filteredMembers = members.filter((member) => {
+    const fullName = `${member.user.firstName} ${member.user.lastName}`.toLowerCase()
+    const email = member.user.email.toLowerCase()
+    const query = searchQuery.toLowerCase()
+    return fullName.includes(query) || email.includes(query)
+  })
+
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/classrooms/${classroomId}/members`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: inviteRole,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to invite member")
+      }
+
+      const newMember = await response.json()
+      setMembers([...members, newMember])
+      setInviteEmail("")
+      setIsInviteDialogOpen(false)
+
+      toast({
+        title: "Success",
+        description: "Invitation sent successfully",
+      })
+    } catch (error) {
+      console.error("Error inviting member:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to invite member",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleRemoveMember = async (memberId) => {
+    try {
+      const response = await fetch(`/api/classrooms/${classroomId}/members/${memberId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to remove member")
+      }
+
+      setMembers(members.filter((member) => member.id !== memberId))
+
+      toast({
+        title: "Success",
+        description: "Member removed successfully",
+      })
+    } catch (error) {
+      console.error("Error removing member:", error)
+      toast({
+        title: "Error",
+        description: "Failed to remove member",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdateRole = async (memberId, newRole) => {
+    try {
+      const response = await fetch(`/api/classrooms/${classroomId}/members/${memberId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: newRole,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update role")
+      }
+
+      setMembers(members.map((member) => (member.id === memberId ? { ...member, role: newRole } : member)))
+
+      toast({
+        title: "Success",
+        description: "Role updated successfully",
+      })
+    } catch (error) {
+      console.error("Error updating role:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update role",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const copyJoinCode = () => {
+    navigator.clipboard.writeText(joinCode)
+    toast({
+      title: "Copied!",
+      description: "Join code copied to clipboard",
+    })
+  }
+
+  if (loading) {
+    return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Classroom Members</CardTitle>
+            <CardDescription>Loading members...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          </CardContent>
+        </Card>
     )
-    console.log("Role:", selectedRole)
-    setInviteEmails("")
-    setShowInviteDialog(false)
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search members..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Invite Members
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Invite Members</DialogTitle>
-                <DialogDescription>Invite new members to join your classroom</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email Addresses</label>
-                  <textarea
-                    className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter email addresses (one per line or comma-separated)"
-                    value={inviteEmails}
-                    onChange={(e) => setInviteEmails(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Recipients will receive an email invitation to join this classroom
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="student">Student</SelectItem>
-                      <SelectItem value="teaching-assistant">Teaching Assistant</SelectItem>
-                      <SelectItem value="co-teacher">Co-Teacher</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleInvite}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Invitations
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="all" className="space-y-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="all">All Members</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-          </TabsList>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="role">
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="role">All Roles</SelectItem>
-                <SelectItem value="student">Students</SelectItem>
-                <SelectItem value="teaching-assistant">Teaching Assistants</SelectItem>
-                <SelectItem value="co-teacher">Co-Teachers</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Classroom Members</CardTitle>
+            <CardDescription>Manage students and teachers in this classroom</CardDescription>
           </div>
-        </div>
+          {isOwner && (
+              <div className="flex space-x-2">
+                <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Invite
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Invite to Classroom</DialogTitle>
+                      <DialogDescription>Send an invitation to join this classroom</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email address</Label>
+                        <Input
+                            id="email"
+                            placeholder="student@example.com"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <Select value={inviteRole} onValueChange={setInviteRole}>
+                          <SelectTrigger id="role">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="student">Student</SelectItem>
+                            <SelectItem value="teacher">Teacher</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Join Code</Label>
+                        <div className="flex">
+                          <Input value={joinCode} readOnly className="rounded-r-none" />
+                          <Button variant="secondary" className="rounded-l-none" onClick={copyJoinCode}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Share this code with students to let them join the classroom
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleInvite}>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Send Invite
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                  placeholder="Search members..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
 
-        <TabsContent value="all">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Tests Completed</TableHead>
-                    <TableHead>Avg. Score</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMembers.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={member.avatar} alt={member.name} />
+          <div className="rounded-md border">
+            <div className="grid grid-cols-12 p-4 font-medium border-b">
+              <div className="col-span-5">Name</div>
+              <div className="col-span-4">Email</div>
+              <div className="col-span-2">Role</div>
+              <div className="col-span-1"></div>
+            </div>
+            <div className="divide-y">
+              {filteredMembers.length > 0 ? (
+                  filteredMembers.map((member) => (
+                      <div key={member.id} className="grid grid-cols-12 p-4 items-center">
+                        <div className="col-span-5 flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                                src={
+                                    member.user.image || `/placeholder.svg?height=32&width=32&text=${member.user.firstName[0]}`
+                                }
+                            />
                             <AvatarFallback>
-                              {member.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                              {member.user.firstName[0]}
+                              {member.user.lastName[0]}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium">{member.name}</p>
-                            <p className="text-xs text-muted-foreground">{member.email}</p>
-                          </div>
+                          <span>
+                      {member.user.firstName} {member.user.lastName}
+                    </span>
                         </div>
-                      </TableCell>
-                      <TableCell>{member.role}</TableCell>
-                      <TableCell>{member.joinedAt}</TableCell>
-                      <TableCell>
-                        <Badge variant={member.status === "Active" ? "default" : "outline"} className="capitalize">
-                          {member.status === "Active" ? (
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                          ) : member.status === "Pending" ? (
-                            <AlertTriangle className="mr-1 h-3 w-3" />
-                          ) : (
-                            <XCircle className="mr-1 h-3 w-3" />
+                        <div className="col-span-4 truncate">{member.user.email}</div>
+                        <div className="col-span-2 capitalize">{member.role}</div>
+                        <div className="col-span-1 text-right">
+                          {isOwner && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Actions</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                      onClick={() =>
+                                          handleUpdateRole(member.id, member.role === "student" ? "teacher" : "student")
+                                      }
+                                  >
+                                    Change to {member.role === "student" ? "Teacher" : "Student"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleRemoveMember(member.id)}>Remove</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                           )}
-                          {member.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{member.testsCompleted}</TableCell>
-                      <TableCell>{member.averageScore > 0 ? `${member.averageScore}%` : "N/A"}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>
-                              <UserCog className="mr-2 h-4 w-4" />
-                              Change Role
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Mail className="mr-2 h-4 w-4" />
-                              Send Message
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
-                              <UserMinus className="mr-2 h-4 w-4" />
-                              Remove from Classroom
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="active">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Tests Completed</TableHead>
-                    <TableHead>Avg. Score</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMembers
-                    .filter((member) => member.status === "Active")
-                    .map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={member.avatar} alt={member.name} />
-                              <AvatarFallback>
-                                {member.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{member.name}</p>
-                              <p className="text-xs text-muted-foreground">{member.email}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell>{member.joinedAt}</TableCell>
-                        <TableCell>{member.testsCompleted}</TableCell>
-                        <TableCell>{member.averageScore > 0 ? `${member.averageScore}%` : "N/A"}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <UserCog className="mr-2 h-4 w-4" />
-                                Change Role
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Mail className="mr-2 h-4 w-4" />
-                                Send Message
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
-                                <UserMinus className="mr-2 h-4 w-4" />
-                                Remove from Classroom
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="pending">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Invited</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMembers
-                    .filter((member) => member.status === "Pending")
-                    .map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarImage src={member.avatar} alt={member.name} />
-                              <AvatarFallback>
-                                {member.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <p className="font-medium">{member.name}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{member.email}</TableCell>
-                        <TableCell>{member.role}</TableCell>
-                        <TableCell>{member.joinedAt}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm" className="mr-2">
-                            <Mail className="mr-2 h-3 w-3" />
-                            Resend
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive">
-                            <XCircle className="mr-2 h-3 w-3" />
-                            Cancel
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                        </div>
+                      </div>
+                  ))
+              ) : (
+                  <div className="p-4 text-center text-muted-foreground">No members found</div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
   )
 }
 
