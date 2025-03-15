@@ -26,18 +26,18 @@ export default function RootLayout({
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false}>
             <div className="flex min-h-screen flex-col">
-              <header className="border-b">
-                <div className="container flex h-16 items-center px-4">
-                  <MainNav />
-                  <div className="ml-auto flex items-center space-x-4">
-                    <UserNav />
-                  </div>
+            <header className="border-b w-full">
+              <div className="max-w-screen-xl w-full mx-auto flex h-16 items-center px-4">
+                <MainNav />
+                <div className="ml-auto flex items-center space-x-4">
+                  <UserNav />
                 </div>
-              </header>
+              </div>
+            </header>
               <main className="flex-1">{children}</main>
-              <footer className="border-t py-6">
-                <div className="container flex flex-col items-center justify-between gap-4 px-4 md:flex-row">
-                  <p className="text-center text-sm text-muted-foreground">
+              <footer className="border-t py-6 w-full">
+                <div className="max-w-screen-xl w-full mx-auto flex flex-row items-center justify-between px-4">
+                  <p className="text-sm text-muted-foreground flex-grow">
                     &copy; {new Date().getFullYear()} STEM Test Generator. All rights reserved.
                   </p>
                   <nav className="flex gap-4">
