@@ -8,7 +8,7 @@ import { Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { RecentTests } from "@/components/recent-tests";
 import { ClassroomOverview } from "@/components/classroom-overview";
 import { fetchUserSession } from "./actions";
-import { isSameMonth } from "date-fns"; // ✅ Import date-fns to check if results are from this month
+import { isSameMonth } from "date-fns";
 
 export default function DashboardPage() {
   const [session, setSession] = useState(null);
@@ -16,7 +16,7 @@ export default function DashboardPage() {
   const [totalTests, setTotalTests] = useState<number | string>("-");
   const [completedTests, setCompletedTests] = useState<number | string>("-");
   const [averageScore, setAverageScore] = useState<number | string>("-");
-  const [averageScoreThisMonth, setAverageScoreThisMonth] = useState<number | string>("-"); // ✅ NEW STATE
+  const [averageScoreThisMonth, setAverageScoreThisMonth] = useState<number | string>("-");
   const [highestScore, setHighestScore] = useState<number | string>("-");
   const [lowestScore, setLowestScore] = useState<number | string>("-");
   const [loading, setLoading] = useState(true);
@@ -170,6 +170,19 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      {/* Recent Tests & Classroom Overview */}
+      <Tabs defaultValue="recent" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="recent">Recent Tests</TabsTrigger>
+          <TabsTrigger value="classrooms">My Classrooms</TabsTrigger>
+        </TabsList>
+        <TabsContent value="recent" className="mt-4">
+          <RecentTests />
+        </TabsContent>
+        <TabsContent value="classrooms" className="mt-4">
+          <ClassroomOverview classrooms={[]} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
