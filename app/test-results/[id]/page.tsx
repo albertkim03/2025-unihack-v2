@@ -54,13 +54,35 @@ export default async function TestResultsPage({ params }) {
           question: true,
         },
       },
+      test: {
+        include: {
+          questions: true,
+        },
+      },
     },
+
   })
 
   if (!testResult || !testResult.completedAt) {
     // If the test hasn't been completed, redirect to take the test
     redirect(`/take-test/${testId}`)
   }
+
+  let totalScore = 0;
+  // for (answer of testResult.answers) {
+  //   totalScore += answer.score
+  // }
+
+  for (let i = 0; i < testResult.answers.length; i++) {
+    totalScore += testResult.answers[i].score;
+  }
+
+  console.log(testResult)
+
+  const totalPossibleScore = testResult.test.questions.reduce((sum, question) => sum + question.points, 0)
+
+  testResult.score = totalScore / totalPossibleScore * 100;
+  console.log(testResult.score)
 
   return <TestResultsView test={test} testResult={testResult} />
 }
