@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { updateClassroom, deleteClassroom } from "@/app/actions/classroom"
 import { useFormState } from "react-dom"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const initialState = {
   errors: {},
@@ -116,12 +117,49 @@ export function ClassroomSettings({ classroomId }) {
 
   if (isLoading) {
     return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading classroom settings...</p>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-7 w-[180px] mb-2" />
+            <Skeleton className="h-5 w-[240px]" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-[120px]" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-[100px]" />
+              <Skeleton className="h-[120px] w-full" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-[80px]" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-[100px]" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-[80px]" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 flex-1" />
+                <Skeleton className="h-10 w-10" />
+              </div>
+              <Skeleton className="h-4 w-[280px]" />
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Skeleton className="h-10 w-[160px]" />
+            <Skeleton className="h-10 w-[120px]" />
+          </CardFooter>
+        </Card>
+      </div>
     )
   }
 

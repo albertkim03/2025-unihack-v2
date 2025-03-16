@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Link from "next/link";
 import { format } from "date-fns";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PersonalTestsListProps {
   viewType: string;
@@ -75,11 +76,57 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
   }, [searchQuery, selectedSubject]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Tests</h1>
-        <Spinner />
-        <p className="text-center mt-4 text-muted-foreground">Loading your tests...</p>
+    return viewType === "grid" ? (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between">
+                <Skeleton className="h-6 w-[200px]" />
+                <Skeleton className="h-5 w-[80px]" />
+              </div>
+              <Skeleton className="h-4 w-[120px] mt-2" />
+            </CardHeader>
+            <CardContent className="pb-2">
+              <div className="grid grid-cols-2 gap-2">
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <div key={j}>
+                    <Skeleton className="h-4 w-[60px] mb-1" />
+                    <Skeleton className="h-5 w-[80px]" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Skeleton className="h-10 w-[120px]" />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    ) : (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <TableHead key={i}>
+                  <Skeleton className="h-4 w-[100px]" />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                {Array.from({ length: 8 }).map((_, j) => (
+                  <TableCell key={j}>
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }

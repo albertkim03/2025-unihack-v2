@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label"
 import { UserPlus, Search, Mail, Copy, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ClassroomMembers({ classroomId, isOwner = false }) {
   const [members, setMembers] = useState([])
@@ -185,17 +186,50 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
 
   if (loading) {
     return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Classroom Members</CardTitle>
-            <CardDescription>Loading members...</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <Skeleton className="h-7 w-[180px] mb-2" />
+              <Skeleton className="h-5 w-[240px]" />
             </div>
-          </CardContent>
-        </Card>
+            <Skeleton className="h-10 w-[100px]" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-full mb-4" />
+          
+          <div className="rounded-md border">
+            <div className="grid grid-cols-12 p-4 border-b">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className={`${i === 0 ? 'col-span-5' : i === 1 ? 'col-span-4' : i === 2 ? 'col-span-2' : 'col-span-1'}`}>
+                  <Skeleton className="h-4 w-[80%]" />
+                </div>
+              ))}
+            </div>
+            
+            <div className="divide-y">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-12 p-4 items-center">
+                  <div className="col-span-5 flex items-center gap-2">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-[120px]" />
+                  </div>
+                  <div className="col-span-4">
+                    <Skeleton className="h-4 w-[180px]" />
+                  </div>
+                  <div className="col-span-2">
+                    <Skeleton className="h-4 w-[60px]" />
+                  </div>
+                  <div className="col-span-1 flex justify-end">
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
