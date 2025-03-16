@@ -10,6 +10,7 @@ import { ClassroomOverview } from "@/components/classroom-overview";
 import { fetchUserSession } from "./actions";
 import { isSameMonth } from "date-fns";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "../../components/ui/skeleton"
 
 interface Classroom {
   id: string;
@@ -138,11 +139,60 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-6">Dashboard</h1>
-        <Spinner />
-        <p className="text-center mt-4 text-muted-foreground">Fetching your data...</p>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-[150px]" />
+        </div>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-3 mb-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-[100px]" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-[60px] mb-2" />
+                <Skeleton className="h-3 w-[140px]" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="mb-8">
+          <CardHeader className="pb-2">
+            <Skeleton className="h-6 w-[150px] mb-2" />
+            <Skeleton className="h-4 w-[200px]" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex flex-col space-y-2">
+                  <Skeleton className="h-4 w-[120px]" />
+                  <Skeleton className="h-8 w-[80px]" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-8">
+          <Skeleton className="h-10 w-[200px] mb-4" />
+          <div className="grid gap-4 md:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-5 w-[150px] mb-2" />
+                  <Skeleton className="h-4 w-[200px]" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
-    );
+    )
   }
   if (error) return <p className="text-red-500">{error}</p>;
 
