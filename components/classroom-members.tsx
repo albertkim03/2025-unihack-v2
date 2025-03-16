@@ -301,8 +301,8 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
                                 }
                             />
                             <AvatarFallback 
-                              className={`bg-[#${session?.user?.iconColor || 'e5e7eb'}]`} 
-                              style={{ backgroundColor: `#${session?.user?.iconColor || 'e5e7eb'}` }}
+                              className={`bg-[#${member?.user?.iconColor || 'e5e7eb'}]`} 
+                              style={{ backgroundColor: `#${member?.user?.iconColor || 'e5e7eb'}` }}
                             >
                               {member.user.firstName[0]}
                               {member.user.lastName[0]}
