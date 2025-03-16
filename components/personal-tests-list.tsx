@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 // Removed unused icons: Eye, MoreHorizontal, FileText, Share
 import Link from "next/link";
 import { format } from "date-fns";
-import { Spinner } from "@/components/spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 interface PersonalTestsListProps {
   viewType: string;
@@ -27,14 +27,6 @@ interface TestItem {
   status: string;
   shared: boolean;
   score: string;
-}
-
-export function Spinner() {
-  return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-    </div>
-  );
 }
 
 export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: PersonalTestsListProps) {

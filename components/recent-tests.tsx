@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Eye, FileText, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Spinner } from "@/components/spinner";
+import { Spinner } from "@/components/ui/spinner";
 
 type TestItem = {
   id: string;
@@ -17,14 +17,6 @@ type TestItem = {
   answeredQuestions: string; // Now a string to allow "-/{totalQuestions}"
   totalQuestions: number;
 };
-
-export function Spinner() {
-  return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-    </div>
-  );
-}
 
 export function RecentTests() {
   const [tests, setTests] = useState<TestItem[]>([]);
@@ -153,10 +145,6 @@ export function RecentTests() {
                 <Button variant="ghost" size="icon">
                   <FileText className="h-4 w-4" />
                   <span className="sr-only">View results</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
                 </Button>
               </TableCell>
             </TableRow>
