@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, FileText, MoreHorizontal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -107,46 +105,33 @@ export function RecentTests() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Test Name</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Completion</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-center">Test Name</TableHead>
+            <TableHead className="text-center">Subject</TableHead>
+            <TableHead className="text-center">Created</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-center">Completion</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {tests.map((test) => (
             <TableRow key={test.id}>
-              <TableCell className="font-medium">{test.name}</TableCell>
-              <TableCell>{test.subject}</TableCell>
-              <TableCell>{formatDistanceToNow(new Date(test.createdAt)) + " ago"}</TableCell>
-              <TableCell>
+              <TableCell className="text-center font-medium">{test.name}</TableCell>
+              <TableCell className="text-center">{test.subject}</TableCell>
+              <TableCell className="text-center">{formatDistanceToNow(new Date(test.createdAt)) + " ago"}</TableCell>
+              <TableCell className="text-center">
                 <Badge
                   variant={
                     test.status === "Assigned"
                       ? "outline"
                       : test.status === "Completed"
                       ? "default"
-                      : test.status === "Created"
-                      ? "secondary"
-                      : "destructive"
+                      : "secondary"
                   }
                 >
                   {test.status}
                 </Badge>
               </TableCell>
-              <TableCell>{test.answeredQuestions}</TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon">
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View test</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <FileText className="h-4 w-4" />
-                  <span className="sr-only">View results</span>
-                </Button>
-              </TableCell>
+              <TableCell className="text-center">{test.answeredQuestions}</TableCell>
             </TableRow>
           ))}
         </TableBody>

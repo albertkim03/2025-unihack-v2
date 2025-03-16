@@ -204,7 +204,7 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
     }
   }
 
-  // -------------- 4. View a single student’s answers --------------
+  // -------------- 4. View a single student's answers --------------
   const handleViewStudentAnswers = async (student: StudentCompletion) => {
     setSelectedStudent(student)
     setHasUnsavedChanges(false)
@@ -375,19 +375,17 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Test Name</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Time Limit</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Completion</TableHead>
-                      <TableHead>Avg. Score</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-center">Test Name</TableHead>
+                      <TableHead className="text-center">Created</TableHead>
+                      <TableHead className="text-center">Time Limit</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Completion</TableHead>
+                      <TableHead className="text-center">Avg. Score</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTests.map((test) => {
                       const completionRate = Math.round(test.completionRate)
-                      // Derive a "status" if you like, or store one in your DB:
                       const status =
                         completionRate < 100 && completionRate > 0
                           ? "Active"
@@ -396,10 +394,10 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                           : "Scheduled"
                       return (
                         <TableRow key={test.id}>
-                          <TableCell className="font-medium">{test.name}</TableCell>
-                          <TableCell>{new Date(test.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>{test.timeLimit} minute(s)</TableCell>
-                          <TableCell>
+                          <TableCell className="text-center font-medium">{test.name}</TableCell>
+                          <TableCell className="text-center">{new Date(test.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-center">{test.timeLimit} minute(s)</TableCell>
+                          <TableCell className="text-center">
                             <Badge
                               variant={
                                 status === "Active"
@@ -412,56 +410,16 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                               {status}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
                               <Progress value={completionRate} className="h-2 w-20" />
                               <span className="text-xs">{completionRate}%</span>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-center">
                             {test.averageScore > 0
                               ? `${Math.round(test.averageScore)}%`
                               : "N/A"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleViewTestResults(test)}
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View Results</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" asChild>
-                              <Link href={`/edit-test/${test.id}`}>
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                              </Link>
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Open menu</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DropdownMenuItem>
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Duplicate
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Export Results
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete Test
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       )
