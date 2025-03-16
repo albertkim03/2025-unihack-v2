@@ -343,7 +343,7 @@ export default function CreateTestPage() {
             </TabsTrigger>
             <TabsTrigger value="assign">
               <CheckCircle className="mr-2 h-4 w-4" />
-              Review & Assign
+              Assign
             </TabsTrigger>
           </TabsList>
 
