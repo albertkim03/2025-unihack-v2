@@ -14,7 +14,7 @@ import { getServerSession } from "next-auth"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "STEM Test Generator",
+  title: "Quizzie",
   description: "AI-powered test paper generator for STEM subjects",
 }
 
