@@ -83,10 +83,6 @@ export function TestResultsView({ test, testResult }: TestResultsViewProps) {
           <p className="text-muted-foreground">Completed on {completionDate}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
           <Button asChild>
             <Link href="/myspace">
               <ArrowLeft className="mr-2 h-4 w-4" />
