@@ -60,6 +60,8 @@ export default function DashboardPage() {
           fetch('/api/classrooms')
         ]);
 
+        console.log("assignedRes:", assignedRes);
+
         if (!createdRes.ok || !assignedRes.ok || !classroomsRes.ok) {
           throw new Error("Failed to fetch data");
         }

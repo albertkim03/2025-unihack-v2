@@ -25,22 +25,46 @@ export default function MySpacePage() {
 
   useEffect(() => {
     async function fetchSummaryData() {
+      console.log("Fetching summary data");
       try {
-        const res = await fetch('/api/myspace/summary')
-        if (!res.ok) {
-          throw new Error('Failed to fetch summary data')
+        const [createdRes, assignedRes] = await Promise.all([
+          fetch('/api/tests?type=created'),
+          fetch('/api/tests?type=assigned'),
+        ]);
+
+        if (!createdRes.ok || !assignedRes.ok) {
+          throw new Error('Failed to fetch tests');
         }
-        const data = await res.json()
-        setSummaryData(data)
+
+        const [createdTests, assignedTests] = await Promise.all([
+          createdRes.json(),
+          assignedRes.json(),
+        ]);
+
+        console.log("assignedTests:", assignedTests);
+
+        // Calculate how many assigned tests are completed using results length
+        const completedTests = assignedTests.filter((test) => test.results && test.results.length > 0);
+
+        const completionRate = assignedTests.length > 0
+          ? Math.round((completedTests.length / assignedTests.length) * 100)
+          : 0;
+
+        // Update summary data
+        setSummaryData({
+          createdTests: createdTests.length,
+          assignedTests: assignedTests.length,
+          completionRate,
+        });
+
       } catch (error) {
-        console.error('Error fetching summary data:', error)
+        console.error('Error fetching summary data:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-
-    fetchSummaryData()
-  }, [])
+    fetchSummaryData();
+  }, []);
 
   return (
       <div className="container mx-auto px-4 py-8">
@@ -92,9 +116,9 @@ export default function MySpacePage() {
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  type="search" 
-                  placeholder="Search tests..." 
+                <Input
+                  type="search"
+                  placeholder="Search tests..."
                   className="pl-8 w-full sm:w-[200px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
