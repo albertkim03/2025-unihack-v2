@@ -59,7 +59,10 @@ export function ClassroomClientWrapper({ classroom }) {
                                                     member.user.image || `/placeholder.svg?height=32&width=32&text=${member.user.firstName[0]}`
                                                 }
                                             />
-                                            <AvatarFallback className={`bg-[#${member.user.iconColor}]`} style={{ backgroundColor: `#${member.user.iconColor}` }}>
+                                            <AvatarFallback 
+                                                className={`bg-[#${member?.user?.iconColor || 'e5e7eb'}]`} 
+                                                style={{ backgroundColor: `#${member?.user?.iconColor || 'e5e7eb'}` }}
+                                            >
                                                 {member.user.firstName[0]}
                                                 {member.user.lastName[0]}
                                             </AvatarFallback>
