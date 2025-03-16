@@ -9,6 +9,7 @@ import { RecentTests } from "@/components/recent-tests";
 import { ClassroomOverview } from "@/components/classroom-overview";
 import { fetchUserSession } from "./actions";
 import { isSameMonth } from "date-fns";
+import { Spinner } from "@/components/ui/spinner";
 
 interface Classroom {
   id: string;
@@ -58,6 +59,8 @@ export default function DashboardPage() {
           fetch(`/api/tests?type=assigned`),
           fetch('/api/classrooms')
         ]);
+
+        console.log("assignedRes:", assignedRes);
 
         if (!createdRes.ok || !assignedRes.ok || !classroomsRes.ok) {
           throw new Error("Failed to fetch data");
@@ -132,7 +135,15 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  if (loading) return <p>Loading dashboard...</p>;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Dashboard</h1>
+        <Spinner />
+        <p className="text-center mt-4 text-muted-foreground">Fetching your data...</p>
+      </div>
+    );
+  }
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (

@@ -120,8 +120,8 @@ export default function CreateClassroomPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid gap-8 md:grid-cols-2">
-              <Card>
+            <div className="grid gap-8">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Classroom Details</CardTitle>
                   <CardDescription>Enter the basic information about your classroom</CardDescription>
@@ -203,9 +203,25 @@ export default function CreateClassroomPage() {
                       )}
                   />
                 </CardContent>
+                <Separator />
+                <CardContent className="flex items-center justify-between space-x-4 pt-6">
+                  <Button type="button" variant="outline" onClick={() => router.push("/classrooms")}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Classroom"
+                    )}
+                  </Button>
+                </CardContent>
               </Card>
 
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Invite Students</CardTitle>
                   <CardDescription>Add students to your classroom</CardDescription>
@@ -281,23 +297,7 @@ export default function CreateClassroomPage() {
                     </TabsContent>
                   </Tabs>
                 </CardContent>
-              </Card>
-            </div>
-
-            <div className="mt-8 flex justify-end space-x-4">
-              <Button type="button" variant="outline" onClick={() => router.push("/classrooms")}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                ) : (
-                    "Create Classroom"
-                )}
-              </Button>
+              </Card> */}
             </div>
           </form>
         </Form>
