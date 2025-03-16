@@ -53,7 +53,6 @@ export async function signup(prevState: FormState, formData: FormData): Promise<
   const colors = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#60a5fa', '#a78bfa', '#e879f9', '#f472b6']
   const randomColor = colors[Math.floor(Math.random() * colors.length)]
 
-
   // Create the user
   try {
     await prisma.user.create({
@@ -62,7 +61,7 @@ export async function signup(prevState: FormState, formData: FormData): Promise<
         lastName,
         email,
         password: hashedPassword,
-        iconColor: randomColor.substring(1),
+        iconColor: randomColor,
       },
     })
 

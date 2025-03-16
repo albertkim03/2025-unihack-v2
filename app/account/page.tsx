@@ -82,7 +82,10 @@ export default function AccountPage() {
                             src={session?.user?.image || "/placeholder.svg?height=80&width=80"}
                             alt={session?.user?.name || "User"}
                         />
-                        <AvatarFallback className={`bg-[#${session?.user?.iconColor}]`} style={{ backgroundColor: `#${session?.user?.iconColor}` }}>
+                        <AvatarFallback 
+                          className={`bg-[#${session?.user?.iconColor || 'e5e7eb'}]`} 
+                          style={{ backgroundColor: `#${session?.user?.iconColor || 'e5e7eb'}` }}
+                        >
                           {session?.user?.firstName?.[0]}
                           {session?.user?.lastName?.[0]}
                         </AvatarFallback>
