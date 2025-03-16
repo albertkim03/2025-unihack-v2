@@ -60,7 +60,7 @@ export function AssignedTestsList({ viewType, searchQuery, selectedSubject }: As
                 ? "Completed"
                 : "Pending"
               : "Pending",
-            score: test.results.length > 0 ? `${test.results[0].score}%` : undefined,
+            score: test.results?.length > 0 ? `${Math.round(test.results[0].score)}%` : "-",
           }));
 
         setTests(formattedTests);
@@ -157,15 +157,15 @@ export function AssignedTestsList({ viewType, searchQuery, selectedSubject }: As
               <TableCell>{test.dueDate}</TableCell>
               <TableCell>
                 <Badge
-                  variant={
+                  className={
                     test.status === "Completed"
-                      ? "outline"
+                      ? "bg-green-500 text-white"
                       : test.status === "Pending"
-                      ? "secondary"
-                      : "default"
+                      ? "bg-gray-300 text-black"
+                      : "bg-blue-500 text-white"
                   }
                 >
-                  {test.status}
+                {test.status}
                 </Badge>
               </TableCell>
               <TableCell>{test.score || "-"}</TableCell>
