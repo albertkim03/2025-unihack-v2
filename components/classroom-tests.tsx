@@ -1,310 +1,313 @@
 "use client"
 
-import { useState } from "react"
+import React, { useEffect, useState } from "react"
+import Link from "next/link"
+
+// --- 1) Import all your UI components from /components/ui ---
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+// --- 2) Import icons from lucide-react (or your icon set) ---
 import {
-  Search,
-  Plus,
-  FileText,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Copy,
-  Trash2,
-  Download,
-  Filter,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
   AlertTriangle,
   ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Copy,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Filter,
   Mail,
+  MoreHorizontal,
+  Search,
+  Trash2,
+  XCircle
 } from "lucide-react"
-import Link from "next/link"
+
+// --- 3) Optional: import your toast hooks/components ---
+import { useToast } from "@/components/ui/use-toast"
+
+// --------------------------------
+//    Type Definitions (Optional)
+// --------------------------------
 
 interface ClassroomTestsProps {
   classroomId: string
 }
 
-export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [viewType, setViewType] = useState("list")
-  const [selectedTest, setSelectedTest] = useState<any>(null)
-  const [selectedStudent, setSelectedStudent] = useState<any>(null)
+interface TestData {
+  id: string
+  name: string
+  subject: string
+  timeLimit: number
+  createdAt: string
+  updatedAt: string
+  classroomId: string | null
+  creatorId: string
+  completionRate: number    // calculated on the backend
+  averageScore: number      // calculated on the backend
+  // If your endpoint returns other fields (status, etc.), add them here
+}
 
-  // Add state for edited scores and total score
-  const [editedAnswers, setEditedAnswers] = useState<any[]>([])
+interface MemberData {
+  id: string
+  user: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+  role: string
+  joinedAt: string
+}
+
+interface StudentCompletion {
+  userId: string
+  name: string
+  avatar?: string
+  status: "Not Started" | "In Progress" | "Completed"
+  completedAt?: string
+  score?: number
+  timeSpent?: string
+}
+
+interface TestResult {
+  id: string
+  score: number
+  completedAt: string | null
+  timeSpent: number | null
+  userId: string
+  testId: string
+  answers: {
+    id: string
+    text: string
+    isCorrect: boolean
+    score: number
+    question: {
+      id: string
+      text: string
+      answer: string
+      points: number
+    }
+  }[]
+}
+
+export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
+  const { toast } = useToast()        // (optional) for success/error toasts
+
+  // --------------------- Main data states ---------------------
+  const [tests, setTests] = useState<TestData[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [viewType, setViewType] = useState<"list" | "grid">("list")
+
+  // -------------- For the Test Results Dialog --------------
+  const [selectedTest, setSelectedTest] = useState<TestData | null>(null)
+  const [students, setStudents] = useState<StudentCompletion[]>([])
+  const [selectedStudent, setSelectedStudent] = useState<StudentCompletion | null>(null)
+
+  // -------------- For individual answers editing --------------
+  const [editedAnswers, setEditedAnswers] = useState<TestResult["answers"]>([])
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [totalScore, setTotalScore] = useState(0)
   const [totalMaxScore, setTotalMaxScore] = useState(0)
 
-  // Mock tests data
-  const tests = [
-    {
-      id: "test-1",
-      name: "Mechanics Quiz",
-      subject: "Physics",
-      createdAt: "Mar 14, 2025",
-      dueDate: "Mar 21, 2025",
-      status: "Active",
-      questions: 15,
-      completionRate: 33,
-      averageScore: 82,
-      timeLimit: "30 minutes",
-    },
-    {
-      id: "test-2",
-      name: "Thermodynamics Basics",
-      subject: "Physics",
-      createdAt: "Mar 5, 2025",
-      dueDate: "Mar 12, 2025",
-      status: "Completed",
-      questions: 20,
-      completionRate: 100,
-      averageScore: 78,
-      timeLimit: "45 minutes",
-    },
-    {
-      id: "test-3",
-      name: "Wave Properties",
-      subject: "Physics",
-      createdAt: "Feb 25, 2025",
-      dueDate: "Mar 4, 2025",
-      status: "Completed",
-      questions: 12,
-      completionRate: 100,
-      averageScore: 85,
-      timeLimit: "25 minutes",
-    },
-    {
-      id: "test-4",
-      name: "Electricity & Magnetism",
-      subject: "Physics",
-      createdAt: "Feb 15, 2025",
-      dueDate: "Feb 22, 2025",
-      status: "Completed",
-      questions: 18,
-      completionRate: 100,
-      averageScore: 76,
-      timeLimit: "40 minutes",
-    },
-    {
-      id: "test-5",
-      name: "Quantum Mechanics",
-      subject: "Physics",
-      createdAt: "Mar 18, 2025",
-      dueDate: "Mar 25, 2025",
-      status: "Scheduled",
-      questions: 15,
-      completionRate: 0,
-      averageScore: 0,
-      timeLimit: "35 minutes",
-    },
-  ]
+  // --------------------- 1. Fetch tests ----------------------
+  useEffect(() => {
+    if (!classroomId) return
+    ;(async function fetchTests() {
+      try {
+        const res = await fetch(`/api/classrooms/${classroomId}/tests`, { method: "GET" })
+        if (!res.ok) {
+          console.error("Failed to fetch tests.")
+          return
+        }
+        const data = await res.json()
+        setTests(data) // data: TestData[]
+      } catch (err) {
+        console.error("Error fetching tests:", err)
+      }
+    })()
+  }, [classroomId])
 
-  // Mock student completions data
-  const studentCompletions = [
-    {
-      id: "user-1",
-      name: "Emma Miller",
-      avatar: "/placeholder.svg?height=40&width=40&text=EM",
-      status: "Completed",
-      completedAt: "Mar 15, 2025",
-      score: 95,
-      timeSpent: "22 minutes",
-    },
-    {
-      id: "user-2",
-      name: "James Chen",
-      avatar: "/placeholder.svg?height=40&width=40&text=JC",
-      status: "Completed",
-      completedAt: "Mar 16, 2025",
-      score: 88,
-      timeSpent: "25 minutes",
-    },
-    {
-      id: "user-3",
-      name: "Sophia Patel",
-      avatar: "/placeholder.svg?height=40&width=40&text=SP",
-      status: "Completed",
-      completedAt: "Mar 15, 2025",
-      score: 92,
-      timeSpent: "18 minutes",
-    },
-    {
-      id: "user-4",
-      name: "Michael Johnson",
-      avatar: "/placeholder.svg?height=40&width=40&text=MJ",
-      status: "In Progress",
-      completedAt: "",
-      score: null,
-      timeSpent: "",
-    },
-    {
-      id: "user-5",
-      name: "Olivia Rodriguez",
-      avatar: "/placeholder.svg?height=40&width=40&text=OR",
-      status: "Not Started",
-      completedAt: "",
-      score: null,
-      timeSpent: "",
-    },
-    {
-      id: "user-6",
-      name: "William Taylor",
-      avatar: "/placeholder.svg?height=40&width=40&text=WT",
-      status: "Not Started",
-      completedAt: "",
-      score: null,
-      timeSpent: "",
-    },
-  ]
-
-  // Mock student answers data
-  const studentAnswers = [
-    {
-      id: 1,
-      question: "What is Newton's First Law of Motion?",
-      correctAnswer:
-        "An object at rest stays at rest and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force.",
-      studentAnswer:
-        "An object at rest stays at rest and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force.",
-      isCorrect: true,
-      score: 10,
-      maxScore: 10,
-      aiGenerated: true,
-    },
-    {
-      id: 2,
-      question: "A 2 kg object moving at 5 m/s has a momentum of:",
-      correctAnswer: "10 kg·m/s",
-      studentAnswer: "10 kg·m/s",
-      isCorrect: true,
-      score: 5,
-      maxScore: 5,
-      aiGenerated: true,
-    },
-    {
-      id: 3,
-      question: "The SI unit of force is:",
-      correctAnswer: "Newton (N)",
-      studentAnswer: "Newton (N)",
-      isCorrect: true,
-      score: 5,
-      maxScore: 5,
-      aiGenerated: true,
-    },
-    {
-      id: 4,
-      question: "An object accelerates at 10 m/s² when a force of 5 N is applied. What is the mass of the object?",
-      correctAnswer: "0.5 kg",
-      studentAnswer: "0.5 kg",
-      isCorrect: true,
-      score: 10,
-      maxScore: 10,
-      aiGenerated: true,
-    },
-    {
-      id: 5,
-      question: "The principle of conservation of momentum applies when:",
-      correctAnswer: "No external forces act on the system",
-      studentAnswer: "When two objects collide",
-      isCorrect: false,
-      score: 3,
-      maxScore: 10,
-      aiGenerated: true,
-    },
-  ]
-
-  // Filter tests based on search query
-  const filteredTests = tests.filter(
-    (test) =>
-      test.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      test.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      test.status.toLowerCase().includes(searchQuery.toLowerCase()),
+  // -------------- 2. Filter tests by search query --------------
+  const filteredTests = tests.filter((test) =>
+    [test.name, test.subject].some((field) =>
+      field.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   )
 
-  const handleViewTestResults = (test: any) => {
+  // -------------- 3. View test results => fetch members + results --------------
+  const handleViewTestResults = async (test: TestData) => {
     setSelectedTest(test)
     setSelectedStudent(null)
+    try {
+      // a) Fetch classroom members
+      const membersRes = await fetch(`/api/classrooms/${classroomId}/members`)
+      if (!membersRes.ok) {
+        console.error("Failed to fetch classroom members.")
+        return
+      }
+      const membersData: MemberData[] = await membersRes.json()
+
+      // b) For each member, attempt to get their test result
+      const promises = membersData.map(async (member) => {
+        const fullName = `${member.user.firstName} ${member.user.lastName}`
+        const userId = member.user.id
+        const resultRes = await fetch(`/api/tests/${test.id}/results/${userId}`)
+        if (resultRes.ok) {
+          const result: TestResult = await resultRes.json()
+          const isCompleted = !!result.completedAt
+
+          let userScore = undefined;
+
+
+          return {
+            userId,
+            name: fullName,
+            avatar: "/placeholder.svg",
+            status: isCompleted ? "Completed" : "In Progress",
+            completedAt: isCompleted
+              ? new Date(result.completedAt!).toLocaleDateString()
+              : undefined,
+            score: userScore,
+            timeSpent:
+              isCompleted && result.timeSpent
+                ? `${Math.round(result.timeSpent / 60)} minute(s)`
+                : ""
+          } as StudentCompletion
+        } else {
+          // if 404 or not found => "Not Started"
+          return {
+            userId,
+            name: fullName,
+            avatar: "/placeholder.svg",
+            status: "Not Started"
+          } as StudentCompletion
+        }
+      })
+      const studentCompletions = await Promise.all(promises)
+      setStudents(studentCompletions)
+    } catch (err) {
+      console.error("Error fetching members/results:", err)
+    }
   }
 
-  // Add a function to handle score changes
-  const handleScoreChange = (answerId: number, newScore: number) => {
-    const updatedAnswers = editedAnswers.map((answer) =>
-      answer.id === answerId ? { ...answer, score: newScore } : answer,
-    )
-
-    setEditedAnswers(updatedAnswers)
-    setHasUnsavedChanges(true)
-
-    // Update total score
-    const newTotalScore = updatedAnswers.reduce((sum, answer) => sum + answer.score, 0)
-    setTotalScore(newTotalScore)
-  }
-
-  // Add a function to save score changes
-  const handleSaveScores = () => {
-    // In a real app, this would send the updated scores to the backend
-    console.log("Saving updated scores:", editedAnswers)
-
-    // Update the studentAnswers with the new scores
-    // This is just for demo purposes - in a real app, you'd update the database
-    setHasUnsavedChanges(false)
-
-    // Show a success message or toast notification
-    alert("Scores saved successfully")
-  }
-
-  // Update the handleViewStudentAnswers function to initialize edited answers
-  const handleViewStudentAnswers = (student: any) => {
+  // -------------- 4. View a single student’s answers --------------
+  const handleViewStudentAnswers = async (student: StudentCompletion) => {
     setSelectedStudent(student)
-    setEditedAnswers([...studentAnswers])
+    setHasUnsavedChanges(false)
+    setEditedAnswers([])
+    setTotalScore(0)
+    setTotalMaxScore(0)
 
-    // Calculate total score and max score
-    const total = studentAnswers.reduce((sum, answer) => sum + answer.score, 0)
-    const maxTotal = studentAnswers.reduce((sum, answer) => sum + answer.maxScore, 0)
+    if (!selectedTest) return
 
-    setTotalScore(total)
-    setTotalMaxScore(maxTotal)
+    // Only fetch the result if they have "In Progress" or "Completed" status
+    if (student.status === "Not Started") return
+    try {
+      const res = await fetch(`/api/tests/${selectedTest.id}/results/${student.userId}`)
+      if (!res.ok) {
+        console.error("Failed to fetch user test answers.")
+        return
+      }
+      const data: TestResult = await res.json()
+
+      // Transform answers into a shape convenient for editing in the UI
+      // const answers = data.answers.map((a) => ({
+      //   ...a,
+      //   question: a.question.text,
+      //   correctAnswer: a.question.answer,
+      //   maxScore: a.question.points
+      // }))
+
+      const answers = data.answers.map((a) => ({
+         ...a,
+      }))
+      setEditedAnswers(answers as any)
+
+      // Summarize total score / max
+      let sum = 0
+      let maxSum = 0
+      answers.forEach((ans) => {
+        sum += ans.score
+        maxSum += ans.question.points
+      })
+      setTotalScore(sum)
+      setTotalMaxScore(maxSum)
+    } catch (err) {
+      console.error("Error fetching user test result:", err)
+    }
   }
 
+  // -------------- 5. Edit scores --------------
+  const handleScoreChange = (answerId: string, newScore: number) => {
+    const updated = editedAnswers.map((ans) =>
+      ans.id === answerId ? { ...ans, score: newScore } : ans
+    )
+    setEditedAnswers(updated)
+    setHasUnsavedChanges(true)
+    const newTotal = updated.reduce((sum, ans) => sum + ans.score, 0)
+    setTotalScore(newTotal)
+  }
+
+  // -------------- 6. Save updated scores => PATCH --------------
+  const handleSaveScores = async () => {
+    if (!selectedTest || !selectedStudent) return
+    try {
+      const body = {
+        answers: editedAnswers.map((ans) => ({
+          answerId: ans.id,
+          score: ans.score
+        }))
+      }
+      const res = await fetch(`/api/tests/${selectedTest.id}/results/${selectedStudent.userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      })
+      if (!res.ok) {
+        console.error("Failed to save updated scores.")
+        return
+      }
+      setHasUnsavedChanges(false)
+
+      // Optional: show a success toast
+      toast({
+        title: "Scores saved",
+        description: "All changes have been saved successfully!"
+      })
+    } catch (error) {
+      console.error("Error saving scores:", error)
+    }
+  }
+
+  // -------------- 7. Dialog navigation --------------
   const handleBackToTestResults = () => {
     setSelectedStudent(null)
   }
-
   const handleCloseResults = () => {
     setSelectedTest(null)
     setSelectedStudent(null)
   }
 
+  // ----------------------------------------------------------------
+  //                         RENDER
+  // ----------------------------------------------------------------
   return (
     <div className="space-y-6">
+      {/* Top bar: search input & list/grid toggle */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -317,30 +320,29 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
           />
         </div>
         <div className="flex gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant={viewType === "list" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewType("list")}
-            >
-              <FileText className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewType === "grid" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewType("grid")}
-            >
-              <div className="grid grid-cols-2 gap-0.5">
-                <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-                <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-                <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-                <div className="h-1.5 w-1.5 rounded-sm bg-current"></div>
-              </div>
-            </Button>
-          </div>
+          <Button
+            variant={viewType === "list" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setViewType("list")}
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewType === "grid" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setViewType("grid")}
+          >
+            <div className="grid grid-cols-2 gap-0.5">
+              <div className="h-1.5 w-1.5 rounded-sm bg-current" />
+              <div className="h-1.5 w-1.5 rounded-sm bg-current" />
+              <div className="h-1.5 w-1.5 rounded-sm bg-current" />
+              <div className="h-1.5 w-1.5 rounded-sm bg-current" />
+            </div>
+          </Button>
         </div>
       </div>
 
+      {/* Tabs: All Tests, Completed, etc. */}
       <Tabs defaultValue="all" className="space-y-4">
         <div className="flex items-center justify-between">
           <TabsList>
@@ -365,6 +367,7 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
           </div>
         </div>
 
+        {/* --- TAB: ALL TESTS --- */}
         <TabsContent value="all">
           {viewType === "list" ? (
             <Card>
@@ -374,7 +377,7 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                     <TableRow>
                       <TableHead>Test Name</TableHead>
                       <TableHead>Created</TableHead>
-                      <TableHead>Due Date</TableHead>
+                      <TableHead>Time Limit</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Completion</TableHead>
                       <TableHead>Avg. Score</TableHead>
@@ -382,168 +385,203 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTests.map((test) => (
-                      <TableRow key={test.id}>
-                        <TableCell className="font-medium">{test.name}</TableCell>
-                        <TableCell>{test.createdAt}</TableCell>
-                        <TableCell>{test.dueDate}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              test.status === "Active"
-                                ? "default"
-                                : test.status === "Completed"
+                    {filteredTests.map((test) => {
+                      const completionRate = Math.round(test.completionRate)
+                      // Derive a "status" if you like, or store one in your DB:
+                      const status =
+                        completionRate < 100 && completionRate > 0
+                          ? "Active"
+                          : completionRate === 100
+                          ? "Completed"
+                          : "Scheduled"
+                      return (
+                        <TableRow key={test.id}>
+                          <TableCell className="font-medium">{test.name}</TableCell>
+                          <TableCell>{new Date(test.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>{test.timeLimit} minute(s)</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                status === "Active"
+                                  ? "default"
+                                  : status === "Completed"
                                   ? "outline"
                                   : "secondary"
-                            }
-                          >
-                            {test.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={test.completionRate} className="h-2 w-20" />
-                            <span className="text-xs">{test.completionRate}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{test.averageScore > 0 ? `${test.averageScore}%` : "N/A"}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleViewTestResults(test)}>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View Results</span>
-                          </Button>
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/edit-test/${test.id}`}>
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Link>
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <Copy className="mr-2 h-4 w-4" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="mr-2 h-4 w-4" />
-                                Export Results
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Test
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              }
+                            >
+                              {status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Progress value={completionRate} className="h-2 w-20" />
+                              <span className="text-xs">{completionRate}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {test.averageScore > 0
+                              ? `${Math.round(test.averageScore)}%`
+                              : "N/A"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewTestResults(test)}
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View Results</span>
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link href={`/edit-test/${test.id}`}>
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Link>
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Export Results
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Test
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredTests.map((test) => (
-                <Card key={test.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg">{test.name}</CardTitle>
-                      <Badge
-                        variant={
-                          test.status === "Active" ? "default" : test.status === "Completed" ? "outline" : "secondary"
-                        }
-                      >
-                        {test.status}
-                      </Badge>
-                    </div>
-                    <CardDescription>{test.subject}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>Due: {test.dueDate}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{test.timeLimit}</span>
-                        </div>
+              {filteredTests.map((test) => {
+                const completionRate = Math.round(test.completionRate)
+                const status =
+                  completionRate < 100 && completionRate > 0
+                    ? "Active"
+                    : completionRate === 100
+                    ? "Completed"
+                    : "Scheduled"
+                return (
+                  <Card key={test.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg">{test.name}</CardTitle>
+                        <Badge
+                          variant={
+                            status === "Active"
+                              ? "default"
+                              : status === "Completed"
+                              ? "outline"
+                              : "secondary"
+                          }
+                        >
+                          {status}
+                        </Badge>
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Completion</span>
-                          <span>{test.completionRate}%</span>
+                      <CardDescription>{test.subject}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>{new Date(test.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span>{test.timeLimit} min</span>
+                          </div>
                         </div>
-                        <Progress value={test.completionRate} className="h-2" />
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Completion</span>
+                            <span>{completionRate}%</span>
+                          </div>
+                          <Progress value={completionRate} className="h-2" />
+                        </div>
+
+                        {status !== "Scheduled" && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Average Score</span>
+                            <span className="font-medium">
+                              {test.averageScore > 0
+                                ? `${Math.round(test.averageScore)}%`
+                                : "N/A"}
+                            </span>
+                          </div>
+                        )}
                       </div>
-
-                      {test.status !== "Scheduled" && (
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Average Score</span>
-                          <span className="font-medium">{test.averageScore > 0 ? `${test.averageScore}%` : "N/A"}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" size="sm" onClick={() => handleViewTestResults(test)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Results
-                    </Button>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                        <Link href={`/edit-test/${test.id}`}>
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Link>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline" size="sm" onClick={() => handleViewTestResults(test)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Results
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>
-                            <Copy className="mr-2 h-4 w-4" />
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Download className="mr-2 h-4 w-4" />
-                            Export Results
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Test
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardFooter>
-                </Card>
-              ))}
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                          <Link href={`/edit-test/${test.id}`}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Link>
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Download className="mr-2 h-4 w-4" />
+                              Export Results
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Test
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </TabsContent>
 
+        {/* --- TAB: COMPLETED TESTS --- */}
         <TabsContent value="completed">
-          {/* Similar structure to "active" tab but filtered for completed tests */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredTests
-              .filter((test) => test.status === "Completed")
+              .filter((test) => Math.round(test.completionRate) === 100)
               .map((test) => (
                 <Card key={test.id}>
                   <CardHeader className="pb-2">
@@ -558,25 +596,27 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>Due: {test.dueDate}</span>
+                          <span>{new Date(test.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{test.timeLimit}</span>
+                          <span>{test.timeLimit} min</span>
                         </div>
                       </div>
-
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span>Completion</span>
-                          <span>{test.completionRate}%</span>
+                          <span>{Math.round(test.completionRate)}%</span>
                         </div>
                         <Progress value={test.completionRate} className="h-2" />
                       </div>
-
                       <div className="flex items-center justify-between text-sm">
                         <span>Average Score</span>
-                        <span className="font-medium">{test.averageScore}%</span>
+                        <span className="font-medium">
+                          {test.averageScore > 0
+                            ? `${Math.round(test.averageScore)}%`
+                            : "N/A"}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -596,7 +636,7 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
         </TabsContent>
       </Tabs>
 
-      {/* Test Results Dialog */}
+      {/* -------------- Test Results Dialog -------------- */}
       <Dialog open={selectedTest !== null} onOpenChange={(open) => !open && handleCloseResults()}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -616,23 +656,35 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
             <DialogDescription>
               {selectedStudent ? (
                 <>
-                  Completed on {selectedStudent.completedAt} • Score: {selectedStudent.score}%
+                  {selectedStudent.completedAt
+                    ? `Completed on ${selectedStudent.completedAt}`
+                    : "Not Completed"}
+                  {selectedStudent.score !== undefined
+                    ? ` • Score: ${selectedStudent.score}%`
+                    : null}
                 </>
               ) : (
                 <>
-                  {selectedTest?.status} • Due: {selectedTest?.dueDate} • Average Score: {selectedTest?.averageScore}%
+                  Average Score:{" "}
+                  {selectedTest?.averageScore
+                    ? `${Math.round(selectedTest.averageScore)}%`
+                    : "N/A"}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
 
+          {/* If no student selected => show the "students" table; otherwise show answer details */}
           {selectedStudent ? (
-            // Student's individual answers with editable scores
             <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="px-3 py-1">
-                    Total Score: {totalScore}/{totalMaxScore} ({Math.round((totalScore / totalMaxScore) * 100)}%)
+                    Total Score: {totalScore}/{totalMaxScore} (
+                    {totalMaxScore > 0
+                      ? Math.round((totalScore / totalMaxScore) * 100)
+                      : 0}
+                    %)
                   </Badge>
                   {hasUnsavedChanges && (
                     <Badge variant="secondary" className="px-3 py-1">
@@ -640,71 +692,72 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                     </Badge>
                   )}
                 </div>
-                {hasUnsavedChanges && (
-                  <Button onClick={handleSaveScores} size="sm">
-                    Save Scores
-                  </Button>
-                )}
               </div>
 
-              {editedAnswers.map((answer) => (
-                <div key={answer.id} className="space-y-3 border rounded-md p-4">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-medium">Question {answer.id}</h3>
-                    <div className="flex items-center gap-2">
-                      {answer.isCorrect ? (
-                        <Badge className="bg-green-600">
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Correct
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive">
-                          <XCircle className="mr-1 h-3 w-3" />
-                          Incorrect
-                        </Badge>
-                      )}
-                      {answer.aiGenerated && (
-                        <Badge variant="outline" className="text-xs">
-                          AI Graded
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-sm">{answer.question}</p>
-
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium">Student's Answer:</span>
-                      <p className={answer.isCorrect ? "text-green-600" : "text-red-600"}>{answer.studentAnswer}</p>
-                    </div>
-                    {!answer.isCorrect && (
-                      <div>
-                        <span className="font-medium">Correct Answer:</span>
-                        <p className="text-green-600">{answer.correctAnswer}</p>
+              {/* Render each answer with an editable score */}
+              {editedAnswers.map((answer) => {
+                const isCorrect = answer.isCorrect
+                return (
+                  <div key={answer.id} className="space-y-3 border rounded-md p-4">
+                    <div className="flex items-start justify-between">
+                      <h3 className="font-medium">Question</h3>
+                      <div className="flex items-center gap-2">
+                        {isCorrect ? (
+                          <Badge className="bg-green-600">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Correct
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">
+                            <XCircle className="mr-1 h-3 w-3" />
+                            Incorrect
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t mt-2">
-                    <span className="font-medium text-sm">Score:</span>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max={answer.maxScore}
-                        value={answer.score}
-                        onChange={(e) => handleScoreChange(answer.id, Number.parseInt(e.target.value) || 0)}
-                        className="w-16 h-8 text-right"
-                      />
-                      <span className="text-sm text-muted-foreground">/ {answer.maxScore}</span>
+                    <p className="text-sm">{answer.question.text}</p>
+
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium">Student's Answer:</span>{" "}
+                        <p className={isCorrect ? "text-green-600" : "text-red-600"}>
+                          {answer.text}
+                        </p>
+                      </div>
+                      {!isCorrect && (
+                        <div>
+                          <span className="font-medium">Correct Answer:</span>{" "}
+                          <p className="text-green-600">
+                            {answer.question.answer}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t mt-2">
+                      <span className="font-medium text-sm">Score:</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={answer.question.points}
+                          value={answer.score}
+                          onChange={(e) =>
+                            handleScoreChange(answer.id, Number(e.target.value) || 0)
+                          }
+                          className="w-16 h-8 text-right"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          / {answer.question.points}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
-            // List of students and their results - keep this part unchanged
             <div className="max-h-[60vh] overflow-y-auto pr-2">
               <Table>
                 <TableHeader>
@@ -718,8 +771,8 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {studentCompletions.map((student) => (
-                    <TableRow key={student.id}>
+                  {students.map((student) => (
+                    <TableRow key={student.userId}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
@@ -732,12 +785,16 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <button
-                              className="font-medium hover:underline focus:outline-none"
-                              onClick={() => student.status === "Completed" && handleViewStudentAnswers(student)}
-                            >
-                              {student.name}
-                            </button>
+                            {student.status === "Not Started" ? (
+                              <span className="font-medium">{student.name}</span>
+                            ) : (
+                              <button
+                                className="font-medium hover:underline focus:outline-none"
+                                onClick={() => handleViewStudentAnswers(student)}
+                              >
+                                {student.name}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </TableCell>
@@ -747,8 +804,8 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                             student.status === "Completed"
                               ? "default"
                               : student.status === "In Progress"
-                                ? "outline"
-                                : "secondary"
+                              ? "outline"
+                              : "secondary"
                           }
                           className="capitalize"
                         >
@@ -763,10 +820,12 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
                         </Badge>
                       </TableCell>
                       <TableCell>{student.completedAt || "—"}</TableCell>
-                      <TableCell>{student.score !== null ? `${student.score}%` : "—"}</TableCell>
+                      <TableCell>
+                        {student.score !== undefined ? `${student.score.toFixed(1)}%` : "—"}
+                      </TableCell>
                       <TableCell>{student.timeSpent || "—"}</TableCell>
                       <TableCell className="text-right">
-                        {student.status === "Completed" ? (
+                        {student.status === "Completed" || student.status === "In Progress" ? (
                           <Button variant="ghost" size="sm" onClick={() => handleViewStudentAnswers(student)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Answers
@@ -789,7 +848,9 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
             <Button variant="outline" onClick={handleCloseResults}>
               Close
             </Button>
-            {selectedStudent && hasUnsavedChanges && <Button onClick={handleSaveScores}>Save Scores</Button>}
+            {selectedStudent && hasUnsavedChanges && (
+              <Button onClick={handleSaveScores}>Save Scores</Button>
+            )}
             {!selectedStudent && (
               <Button variant="outline">
                 <Download className="mr-2 h-4 w-4" />
@@ -802,4 +863,3 @@ export function ClassroomTests({ classroomId }: ClassroomTestsProps) {
     </div>
   )
 }
-
