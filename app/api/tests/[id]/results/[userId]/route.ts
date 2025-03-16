@@ -175,6 +175,8 @@ export async function PATCH(request: Request, { params }) {
 
     const newTotalScore = updatedAnswers.reduce((sum, ans) => sum + (ans.score ?? 0), 0)
 
+    
+
     // optional: update the testResult’s overall score
     const updatedResult = await prisma.testResult.update({
       where: { id: existingResult.id },
