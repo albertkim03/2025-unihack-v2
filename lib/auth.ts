@@ -64,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.firstName = token.firstName as string
         session.user.lastName = token.lastName as string
+        session.user.iconColor = token.iconColor as string
       }
       return session
     },
@@ -72,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.firstName = user.firstName
         token.lastName = user.lastName
+        token.iconColor = user.iconColor
       }
       return token
     },

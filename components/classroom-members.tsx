@@ -231,18 +231,6 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Select value={inviteRole} onValueChange={setInviteRole}>
-                          <SelectTrigger id="role">
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="student">Student</SelectItem>
-                            <SelectItem value="teacher">Teacher</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
                         <Label>Join Code</Label>
                         <div className="flex">
                           <Input value={joinCode} readOnly className="rounded-r-none" />
@@ -300,7 +288,10 @@ export function ClassroomMembers({ classroomId, isOwner = false }) {
                                     member.user.image || `/placeholder.svg?height=32&width=32&text=${member.user.firstName[0]}`
                                 }
                             />
-                            <AvatarFallback>
+                            <AvatarFallback 
+                              className={`bg-[#${member?.user?.iconColor || 'e5e7eb'}]`} 
+                              style={{ backgroundColor: `#${member?.user?.iconColor || 'e5e7eb'}` }}
+                            >
                               {member.user.firstName[0]}
                               {member.user.lastName[0]}
                             </AvatarFallback>

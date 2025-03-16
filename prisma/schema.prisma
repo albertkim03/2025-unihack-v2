@@ -14,6 +14,7 @@ model User {
   lastName      String
   email         String            @unique
   password      String
+  iconColor     String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   classrooms    Classroom[]       @relation("ClassroomOwner")
