@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle, ArrowLeft, Download, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 interface TestResultsViewProps {
   test: any
@@ -252,24 +253,31 @@ export function TestResultsView({ test, testResult }: TestResultsViewProps) {
                 {isAnswered && !answer.isCorrect && (
                   <>
                     {!feedbacks[question.id] && (
-                      <div className="absolute bottom-2 right-2">
+                      <div className="absolute bottom-2 right-2 pb-2 pr-2">
                         <Button
                           size="sm"
-                          variant="secondary"
+                          variant="default"
                           onClick={() => handleGenerateFeedback(question)}
                           disabled={loadingFeedback[question.id]}
                         >
                           {loadingFeedback[question.id] ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : (
-                            "AI Feedback"
+                            "QuizzieAI Solve"
                           )}
                         </Button>
                       </div>
                     )}
                     {feedbacks[question.id] && (
-                      <div className="mt-4 rounded-md border border-blue-300 bg-blue-50 p-4">
-                        <p className="text-sm text-black-600">{feedbacks[question.id]}</p>
+                      <div className="mt-4 rounded-md border border-[#ddd6fe] bg-[#ede9fe] p-4">
+                        <Image
+                            src="/images/QuizzieAiLogo.png"
+                            alt="QuizzieAI Logo"
+                            width={110}
+                            height={40}
+                            className=""
+                          />
+                        <p className="text-sm text-[#18181b] p-2">{feedbacks[question.id]}</p>
                       </div>
                     )}
                   </>
