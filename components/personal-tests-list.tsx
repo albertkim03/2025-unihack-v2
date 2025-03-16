@@ -59,7 +59,7 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
                     ? (test.results[0].completedAt ? "Completed" : "Pending")
                     : "Pending",
           shared: test.shared ?? false,
-          score: test.results && test.results.length > 0 ? `${test.results[0].score}%` : "-",
+          score: test.results && test.results.length > 0 ? `${Math.round(test.results[0].score)}%` : "-",
         }));
         
         setTests(formattedTests);
@@ -146,7 +146,15 @@ export function PersonalTestsList({ viewType, searchQuery, selectedSubject }: Pe
               <TableCell>{test.createdAt}</TableCell>
               <TableCell>{test.questions}</TableCell>
               <TableCell>
-                <Badge variant={test.status === "Completed" ? "outline" : "secondary"}>
+              <Badge
+                  className={
+                    test.status === "Completed"
+                      ? "bg-green-500 text-white"
+                      : test.status === "Pending"
+                      ? "bg-gray-300 text-black"
+                      : "bg-blue-500 text-white"
+                  }
+                >
                   {test.status}
                 </Badge>
               </TableCell>
